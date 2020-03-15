@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fyle Backup Application</title>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="main-layout">
+        <header class="sidenav-header">
+            <div class="site-logo">
+                <img src="{% static 'media/fyle_logo_white_new.png' %}"
+                      class="fyle-logo"/>
+            </div>
+        </header>
+        <div class="container-fyle-login">
+            <h2>Please Sign In</h2>
+            <form method="post">{% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="user-name-wrapper">
+                    {{ form.username.errors }}
+                    {{ form.username }}
+                </div>
+                <div class="password-wrapper">
+                    {{ form.password.errors }}
+                    {{ form.password }}
+                </div>
+                <button class="btn btn-fyle-login" type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

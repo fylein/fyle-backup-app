@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 
 # Application definition
@@ -38,6 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'apps.user',
+    'apps.fyle_connect',
+    'apps.fyle_objects',
+    'apps.backups',
+    'apps.data_fetcher',
+    'apps.file_uploader',
+    'fyle_allauth',
 ]
 
 MIDDLEWARE = [
@@ -52,10 +63,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'fyle_backup_app.urls'
 
+TEMPLATE_LOADERS = (
+    'django.template.loaders.app_directories.load_template_source',
+    'django.template.loaders.filesystem.load_template_source',
+)
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,6 +84,18 @@ TEMPLATES = [
     },
 ]
 
+# django-allauth settings
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/main/home/'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+# Set custom user model
+AUTH_USER_MODEL = 'user.UserProfile'
+
 WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 
 
@@ -76,8 +104,12 @@ WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
 
@@ -119,3 +151,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+# Fyle OAuth2.0
+BASE_URL = config('BASE_URL')
+FYLE_BASE_URL = config('FYLE_BASE_URL')
+CLIENT_ID = config('CLIENT_ID')
+CLIENT_SECRET = config('CLIENT_SECRET')
+AUTHORIZE_URI = config('AUTHORIZE_URI')
+REDIRECT_URI = config('REDIRECT_URI')
+TOKEN_URI = config('TOKEN_URI')

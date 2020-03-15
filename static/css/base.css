@@ -1,0 +1,128 @@
+ 
+:root {
+    --lightGrey: #f2f2f2;
+    --primaryColor: #f36;
+    --secondaryColor: #ff0040;
+    --tertiaryColor: #f5003d;
+    --white: #fff;
+    --darkGrey: #464d57;
+    --pageBackground: #fafafa;
+    --pageBackgroundDark: #301e3f;
+    --lightGreen: #50e3c2;
+    --red: #db0000;
+    --fontGrey: #ababab;
+    --fontDarkGrey: #4a4a4a;
+    --mainHeading: #333333;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--pageBackgroundDark);
+  }
+  
+  html, body {
+    height: 100%;
+    position: relative;
+  }
+
+  h2 {
+      font-family: sans-serif;
+  }
+  
+  /* button {
+    background-color: var(--primaryColor);
+    color: var(--white);
+  } */
+  button {
+    margin: 0;
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.14;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--white);
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border: none;
+    background-color: var(--primaryColor);
+  }
+  
+  .alert {
+    width: 20%;
+    margin: 0;
+    position: absolute;
+  }
+
+  input {
+    min-height: 50px;
+    width : 80%;
+    margin: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding-left: 24px;
+  }
+  
+  a, a:hover {
+    color: var(--fontDarkGrey);
+    text-decoration: none;
+  }
+
+  .container-fluid {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .main-layout {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    /*flex-direction: row;*/
+  }
+
+  .sidenav-header {
+    position: relative;
+    padding: 24px;
+   }
+
+  .site-logo {
+    position: relative;
+  }
+
+  .fyle-logo{
+    max-width: 100px;
+    min-height: 32px;
+  }
+
+  .container-fyle-login{ 
+    min-width: 280px;
+    min-height: 325px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    padding: 16px;
+    background-color: #fff;
+    -webkit-box-shadow: 0 5px 10px 0 rgba(0,0,0,.15);
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,.15);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .login {
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+  }
