@@ -6,6 +6,8 @@ import logging
 from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
@@ -46,6 +48,13 @@ class FyleSdkConnector():
         """
         attachment = self.connection.Expenses.get_attachments(expense_id)
         return attachment
+
+    def extract_employee_details(self):
+        """
+        Extract fyle profile details of user
+        """
+        employee_data = self.connection.Employees.get_my_profile()
+        return employee_data.get('data')
 
 
 class CloudStorage():
@@ -106,7 +115,7 @@ class CloudStorage():
         except ClientError as e:
             logging.error('Presigned url creation failure for object: %s. Error: %s',
                           object_name, e)
-            return None
+            raise
         return response
 
 
@@ -186,26 +195,56 @@ class Dumper():
                         raise
 
     def dump_data(self):
+        """
+        Wrapper function for dumping backup to local file
+        """
         try:
             now = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
             dir_name = self.path + '{}-{}-Date--{}'.format(self.fyle_org_id, self.name, now)
             os.mkdir(dir_name)
             self.dump_csv(dir_name)
-            if self.download_attachments == 'True':
+            if self.download_attachments == 'on':
                 logger.info('Going to download attachment for backup: %s', self.name)
                 self.dump_attachments(dir_name)
             shutil.make_archive(dir_name, 'zip', dir_name)
             logger.info('Archive file created at %s for ', dir_name)
             return dir_name+'.zip'
         except Exception as e:
+            logger.error('Error in dump_data() : %s', e)
             raise
 
 
-def notify_user(fyle_connection, file_path, fyle_org_id):
+def send_email(from_email, to_email, subject, content):
+    """
+    Send an email notification
+    :param from_email: email_id of sender
+    :param to_email: email_id of recipient
+    :param subject: subject for the email
+    :param content: email body
+    """
+    try:
+        message = Mail(
+                        from_email=from_email,
+                        to_emails=to_email,
+                        subject=subject,
+                        html_content=content)
+        sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg_client.send(message)
+    except Exception as e:
+        logger.error('Email sending failed due to: %s',e)
+        raise
+
+def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
     """
     Get a presigned URL and mail it to user
     """
-    object_name = fyle_org_id +'/'+ file_path.split('/')[2]
-    presigned_url = CloudStorage().create_presigned_url(object_name)
-    return presigned_url
-    # send email
+    try:
+        object_name = fyle_org_id +'/'+ file_path
+        presigned_url = CloudStorage().create_presigned_url(object_name)
+        user_data = fyle_connection.extract_employee_details()
+        email_to = user_data.get('employee_email')
+        subject = 'The {0} Backup you requested from Fyle is ready for download'.format(object_type)
+        send_email(settings.SENDER_EMAIL_ID, email_to, subject, presigned_url)
+    except Exception as e:
+        logger.error(e)
+        raise

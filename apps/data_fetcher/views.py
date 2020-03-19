@@ -1,4 +1,5 @@
 import logging
+import json
 
 from django.views import View
 from django.http import HttpResponse
@@ -10,6 +11,7 @@ from apps.backups.models import Backups
 
 from .utils import FyleSdkConnector, CloudStorage, Dumper, notify_user
 logger = logging.getLogger('app')
+
 
 # Authentication for this view to be taken up in v2.
 @method_decorator(csrf_exempt, name='dispatch')
@@ -26,11 +28,11 @@ class ExpensesFetchView(View):
         except Backups.DoesNotExist:
             logger.error('Invalid backup_id sent by JobsInfra. Request: %s', request.POST)
             return HttpResponse(status=400)
-        filters = {}
-        #json.loads(backup.filters)
-        download_attachments = 'True'#filters.get('download_attachments', False)
+
+        filters = json.loads(backup.filters)
+        download_attachments = filters.get('download_attachments')
         refresh_token = backup.fyle_refresh_token
-        fyle_org_id = 'ormsDa8NCYdL' #backup.fyle_org_id
+        fyle_org_id = backup.fyle_org_id
         name = backup.name
 
         # Fetch expenses matching the filters and dump into a local file
@@ -38,24 +40,33 @@ class ExpensesFetchView(View):
         response_data = fyle_connection.extract_expenses(state=filters.get('state'),
                                                          approved_at=filters.get('approved_at'),
                                                          updated_at=filters.get('updated_at'))
+        if not response_data:
+            logger.info('No data found for backup_id: %s', backup_id)
+            backup.current_state = 'NO_DATA_FOUND'
+            backup.save()
+            return HttpResponse(status=200)
         dumper = Dumper(fyle_connection, path=self.path, data=response_data, name=name,
                         fyle_org_id=fyle_org_id, download_attachments=download_attachments)
+
         try:
             file_path = dumper.dump_data()
             logger.info('Download Successful for backup_id: %s', backup_id)
 
-            # Upload the local data file to Clourd storage
             cloud_store = CloudStorage()
             cloud_store.upload(file_path, fyle_org_id)
             logger.info('Cloud upload Successful for backup_id: %s', backup_id)
-
-            # store file_path in db
+            # Get only the object name for db save
+            file_path = file_path.split('/')[2]
 
             # Get a secure URL for this backup and mail it to user
-            url = notify_user(fyle_connection, file_path, fyle_org_id)
-            logger.info(url)
-            # Update current state: READY
+            notify_user(fyle_connection, file_path, fyle_org_id, 'Expenes')
+
+            backup.file_path = file_path
+            backup.current_state = 'READY'
+            backup.save()
             return HttpResponse(status=200)
         except Exception as e:
-            # Update current_state : FAILED
+            backup.current_state = 'FAILED'
+            backup.save()
+            logger.error('Backup process failed for bkp_id: %s . Error: %s', backup_id, e)
             return HttpResponse(status=500)
