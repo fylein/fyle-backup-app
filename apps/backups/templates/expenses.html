@@ -1,24 +1,88 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+
 {% load static %}
-<html lang="en">
-<head>
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fyle Backup Application</title>
-</head>
-<body>
-<div class="container-fluid">
-    <div class="main-layout">
-        <header class="sidenav-header">
-            <div class="site-logo">
-                <img src="{% static 'media/fyle_logo_white_new.png' %}"
-                      class="fyle-logo"/>
-            </div>
-        </header>
-        <div class="container-fyle-login">
-            EXPENSES PAGE
+
+{% block link %}
+    <link rel="stylesheet" href="{% static 'css/table.css' %}">
+    <link rel="stylesheet" href="{% static 'css/filters.css' %}">
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+    <div class="text-left">
+        <button class="btn main-btn" type="button" id="new-backup-btn">New Backup</button>
+    </div>
+    <div class="data-filter-body">
+        <button type="button" class="close" id="close-filters-btn">
+            <span aria-hidden="true">×</span>
+        </button>
+        <form action="/main/backups/" method="post">{% csrf_token %}
+            <strong class="text-muted">Backup Expenses that match the following criteria</strong>
+            {{ form.non_field_errors }}
+            <table>
+                <tr>
+                    <th>Name*</th>
+                    <td>{{form.name}}</td>
+                </tr>  
+                <tr>
+                    <th>Format*</th>
+                    <td>{{form.data_format}}<td>
+                </tr>
+                <tr>
+                    <th>State</th>
+                    <td>
+                        <select class="selectpicker" multiple data-live-search="true" name="state" id="id_state">
+                            {% for choice, value in form.state.field.choices %}
+                                <option>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Approved On</th>
+                    <td>{{form.approved_at_gte}}</td>
+                    <td>{{form.approved_at_lte}}</td>
+                </tr>
+                <tr>
+                    <th>Updated On</th>
+                    <td>{{form.updated_at_gte}}</td>
+                    <td>{{form.updated_at_lte}}</td>
+                </tr>
+                {{form.object_type}}
+            </table>
+            <button class="main-btn btn save-btn" type="submit">Backup</button>
+        </form>
+    </div>
+    <div class="table-layout">
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-head">
+                    <tr class="colHeadings">
+                        <th>Name</th>
+                        <th>Created On</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in backup_list %}
+                        <tr class="expenses-table-row">
+                            <td>{{expense.name}}</td>
+                            <td>{{expense.created_at|slice:":10"}}</td>
+                            <td>{{expense.current_state}}</td>
+                            <td>
+                                {% if expense.current_state == 'READY' %}
+                                    <a href="{% url 'backups-notify' expense.id %}"><i class="fa fa-envelope"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-</body>
-</html>
+{% endblock %}
+
+{% block include-script %}
+    <script src="{% static 'js/expenses.js' %}"></script>
+{% endblock %}

@@ -27,9 +27,15 @@ class Backups(models.Model):
     filters = models.TextField(help_text='Request URL with filters and constraints')
     data_format = models.CharField(max_length=10, help_text="Data format for backup")
     error_message = models.CharField(max_length=255, null=True, help_text="Backup failure reason")
-    # file_path = models.TextField(null=True, help_text='Cloud storage URL for this backup')
+    # we are now storing S3 object name in file_path
+    file_path = models.CharField(null=True, max_length=512,
+                                 help_text='Cloud storage URL for this backup')
     created_at = models.DateTimeField(auto_now_add=True, help_text='Created at datetime')
     modified_at = models.DateTimeField(auto_now=True, help_text='Updated at datetime')
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["-created_at"]
+        get_latest_by = "created_at"
