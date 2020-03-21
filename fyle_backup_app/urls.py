@@ -23,5 +23,6 @@ urlpatterns = [
     path('', UserLoginView.as_view(), name='User login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('main/', include('apps.backups.urls')),
-    path('fyle/', include('apps.fyle_connect.urls'))
+    path('fyle/', include('apps.fyle_connect.urls')),
+    path('fetcher/', include('apps.data_fetcher.urls'))
 ]

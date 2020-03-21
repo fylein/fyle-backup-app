@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 from decouple import config
+from django.contrib.messages import constants as messages
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -44,11 +45,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'apps.user',
     'apps.fyle_connect',
-    'apps.fyle_objects',
     'apps.backups',
     'apps.data_fetcher',
-    'apps.file_uploader',
     'fyle_allauth',
+    'tempus_dominus'
 ]
 
 MIDDLEWARE = [
@@ -75,6 +75,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'apps.user.context_processors.user_data',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -87,6 +88,7 @@ TEMPLATES = [
 # django-allauth settings
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/main/home/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -155,6 +157,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+MESSAGE_TAGS = {
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
+
 # Fyle OAuth2.0
 BASE_URL = config('BASE_URL')
 FYLE_BASE_URL = config('FYLE_BASE_URL')
@@ -163,3 +171,57 @@ CLIENT_SECRET = config('CLIENT_SECRET')
 AUTHORIZE_URI = config('AUTHORIZE_URI').format(BASE_URL)
 REDIRECT_URI = config('REDIRECT_URI')
 TOKEN_URI = config('TOKEN_URI').format(BASE_URL)
+
+DOWNLOAD_PATH = config('DOWNLOAD_PATH')
+CLOUD_STORAGE_PROVIDER = config('CLOUD_STORAGE_PROVIDER')
+
+# AWS details
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+S3_BUCKET_NAME = config('S3_BUCKET_NAME')
+S3_REGION_NAME = config('S3_REGION_NAME')
+PRESIGNED_URL_EXPIRY = config('PRESIGNED_URL_EXPIRY')
+
+FYLE_JOBS_URL = config('FYLE_JOBS_URL')
+FYLE_JOBS_CALLBACK_URL = config('FYLE_JOBS_CALLBACK_URL')
+
+# Email settings
+SENDGRID_API_KEY = config('SENDGRID_API_KEY')
+SENDER_EMAIL_ID = config('SENDER_EMAIL_ID')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(process)d %(levelname)s \
+                         [%(module)s %(name)s %(funcName)s():%(lineno)s]: %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(process)d%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/fyle/fyle_backup.log',
+            'formatter': 'verbose',
+        },
+        'null': {
+            'class': 'logging.NullHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'app': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        }
+    }
+}

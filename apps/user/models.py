@@ -49,6 +49,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
     refresh_token = models.CharField(null=True, max_length=512, help_text='Refresh Token')
+    fyle_org_id = models.CharField(max_length=255, null=True, help_text='Organisation id in Fyle')
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -58,3 +59,4 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
