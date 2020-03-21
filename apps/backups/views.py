@@ -108,11 +108,14 @@ class BackupsView(View):
                                     ))
                 backup.task_id = created_job['id']
                 if created_job is None:
-                    logger.error('Backup_id: %s not scheduled. Task creation failed.',backup.id)
+                    logger.error('Backup_id: %s not scheduled. Task creation failed.', backup.id)
                     messages.error(request, 'Something went wrong. Please try again!')
                     backup.current_state = 'FAILED'
                     backup.save()
                     return redirect('/main/{0}/'.format(object_type))
+                messages.success(request, 'Your backup request has been submitted. \
+                             Once the file is generated we will email you the download\
+                             link on the registered email id.')
                 return redirect('/main/{0}/'.format(object_type))
             messages.error(request, 'Something went wrong. Please try again!')
             return redirect('/main/{0}/'.format(object_type))

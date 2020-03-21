@@ -6,7 +6,6 @@ def user_data(request):
     :return: user email
     """
     if request.user.is_authenticated:
-        print(request.user.email)
         try:
             # Extend this to return org name, and user name later
             # user_details = UserProfile.objects.get(email=request.user)
