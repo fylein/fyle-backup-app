@@ -70,63 +70,59 @@ class BackupsView(View):
         return JsonResponse({"backups": list(backups_list)})
 
     def post(self, request):
-        form = ExpenseForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            refresh_token = request.user.refresh_token
-            fyle_org_id = request.user.fyle_org_id
-            object_type = data.get('object_type')
-            current_state = 'ONGOING'
-            name = data.get('name').replace(' ', '')
-            bkp_filter_obj = BackupFilter(data, object_type)
-            try:
+        try:
+            form = ExpenseForm(request.POST)
+            if form.is_valid():
+                data = form.cleaned_data
+                refresh_token = request.user.refresh_token
+                fyle_org_id = request.user.fyle_org_id
+                object_type = data.get('object_type')
+                current_state = 'ONGOING'
+                name = data.get('name').replace(' ', '')
+                bkp_filter_obj = BackupFilter(data, object_type)
                 filters = bkp_filter_obj.get_filters_for_object()
-            except NotImplementedError:
-                messages.error(request, 'Something went wrong. Please try again!')
-                return redirect('/main/{0}/'.format(object_type))
-            data_format = data.get('data_format')
-            # Need to avoid this get
-            object_type_obj = ObjectLookup.objects.get(name=object_type)
-            try:
+                data_format = data.get('data_format')
+                #TODO Need to avoid this get
+                object_type_obj = ObjectLookup.objects.get(name=object_type)
                 backup = Backups.objects.create(name=name, current_state=current_state,
                                                 object_type=object_type_obj, filters=filters,
                                                 data_format=data_format, fyle_org_id=fyle_org_id,
                                                 fyle_refresh_token=refresh_token
                                                 )
-            except Exception as error:
-                logger.error('Error while creating backup: %s. Error: %s', name, error)
-                messages.error(request, 'Something went wrong. Please try again!')
+                # Schedule this backup using JobsInfra
+                fyle_sdk_connector = FyleSdkConnector(refresh_token)
+                fyle_sdk_connection = fyle_sdk_connector.connection
+                jobs = FyleJobsSDK(fyle_sdk_connection)
+                created_job = jobs.trigger_now(
+                                    callback_url='{0}{1}'.format(
+                                        settings.FYLE_JOBS_CALLBACK_URL,
+                                        '{0}/'.format(object_type)
+                                    ),
+                                    callback_method='POST',
+                                    object_id=backup.id,
+                                    payload={
+                                        'backup_id': backup.id
+                                    },
+                                    job_description='Fetch backup_id {0} for user: {1}'.format(
+                                        backup.id, self.request.user
+                                    ))
+                backup.task_id = created_job['id']
+                if created_job is None:
+                    logger.error('Backup_id: %s not scheduled. Task creation failed.',backup.id)
+                    messages.error(request, 'Something went wrong. Please try again!')
+                    backup.current_state = 'FAILED'
+                    backup.save()
+                    return redirect('/main/{0}/'.format(object_type))
                 return redirect('/main/{0}/'.format(object_type))
-            messages.success(request, 'Your backup request has been submitted. \
-                             Once the file is generated we will email you the download\
-                             link on the registered email id.')
-            # TODO
-            # create a task for Jobs Infra, save task id in backups table
-            # fyle_sdk_connector = FyleSdkConnector(refresh_token)
-            # fyle_sdk_connection = fyle_sdk_connector.connection
-            # jobs = FyleJobsSDK(fyle_sdk_connection)
-            # created_job = jobs.trigger_now(
-            #                     callback_url='{0}{1}'.format(
-            #                         settings.FYLE_JOBS_CALLBACK_URL,
-            #                         '{0}/'.format(object_type)
-            #                     ),
-            #                     callback_method='POST',
-            #                     object_id=backup.id,
-            #                     payload={
-            #                         'backup_id': backup.id
-            #                     },
-            #                     job_description='Fetch backup_id {0} for user: {1}'.format(
-            #                         backup.id, self.request.user
-            #                     )
-            #                 )
-            # # write a correct success check
-            # if not created_job:
-            #     print('job not created')
-            #     #update current_state = FAILED
-            #     # load error message in template context
-            #     redirect('/main/expenses')
-            # # Update task_id in db
-        return redirect('/main/{0}/'.format(object_type))
+            messages.error(request, 'Something went wrong. Please try again!')
+            return redirect('/main/{0}/'.format(object_type))
+        except NotImplementedError:
+            messages.error(request, 'Something went wrong. Please try again!')
+            return redirect('/main/{0}/'.format(object_type))
+        except Exception as e:
+            logger.error('Error during backup creation for backup: %s', name)
+            messages.error(request, 'Something went wrong. Please try again!')
+            return redirect('/main/{0}/'.format(object_type))
 
 
 @method_decorator(login_required, name='dispatch')

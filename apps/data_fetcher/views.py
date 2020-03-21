@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from fyle_backup_app import settings
 from apps.backups.models import Backups
 
-from .utils import FyleSdkConnector, CloudStorage, Dumper, notify_user
+from .utils import FyleSdkConnector, CloudStorage, Dumper, notify_user, remove_items_from_tmp
 logger = logging.getLogger('app')
 
 
@@ -21,8 +21,8 @@ class ExpensesFetchView(View):
     """
     path = settings.DOWNLOAD_PATH
     def post(self, request):
-        logger.info('Got callback hit from Jobs Infra with params: %s', request.POST)
-        backup_id = request.POST.get('backup_id')
+        logger.info('Got callback hit from Jobs Infra with params: %s', request.body)
+        backup_id = json.loads(request.body).get('backup_id')
         try:
             backup = Backups.objects.get(id=backup_id)
         except Backups.DoesNotExist:
@@ -35,7 +35,12 @@ class ExpensesFetchView(View):
         fyle_org_id = backup.fyle_org_id
         name = backup.name
         # Fetch expenses matching the filters and dump into a local file
-        fyle_connection = FyleSdkConnector(refresh_token)
+        try:
+            fyle_connection = FyleSdkConnector(refresh_token)
+        except Exception as e:
+            logger.error('Could not get a connection through FyleSDKConnector for %s. Error: %s',
+                         backup_id, e)
+            return HttpResponse(status=500)
         response_data = fyle_connection.extract_expenses(state=filters.get('state'),
                                                          approved_at=filters.get('approved_at'),
                                                          updated_at=filters.get('updated_at'))
@@ -54,14 +59,16 @@ class ExpensesFetchView(View):
             cloud_store.upload(file_path, fyle_org_id)
             logger.info('Cloud upload Successful for backup_id: %s', backup_id)
             # Get only the object name for db save
-            file_path = file_path.split('/')[2]
+            object_name = file_path.split('/')[2]
 
             # Get a secure URL for this backup and mail it to user
-            notify_user(fyle_connection, file_path, fyle_org_id, 'expenes')
+            notify_user(fyle_connection, object_name, fyle_org_id, 'expenes')
 
             backup.file_path = file_path
             backup.current_state = 'READY'
             backup.save()
+            # Remove the files from local machine
+            remove_items_from_tmp(file_path)
             return HttpResponse(status=200)
         except Exception as e:
             backup.current_state = 'FAILED'

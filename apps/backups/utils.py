@@ -127,9 +127,6 @@ class FyleJobsSDK:
             headers=api_headers,
             json=body
         )
-        print('response of jobs hit')
-        print(response)
-
         if response.status_code == 200:
             result = json.loads(response.text)
             return result

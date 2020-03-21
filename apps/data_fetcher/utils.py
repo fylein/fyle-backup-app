@@ -20,12 +20,15 @@ class FyleSdkConnector():
     Class with utils functions for FyleSDK
     """
     def __init__(self, refresh_token):
-        self.connection = FyleSDK(
-            base_url=settings.BASE_URL,
-            client_id=settings.CLIENT_ID,
-            client_secret=settings.CLIENT_SECRET,
-            refresh_token=refresh_token
-        )
+        try:
+            self.connection = FyleSDK(
+                base_url=settings.BASE_URL,
+                client_id=settings.CLIENT_ID,
+                client_secret=settings.CLIENT_SECRET,
+                refresh_token=refresh_token
+            )
+        except Exception as e:
+            raise
 
     def extract_expenses(self, state, approved_at, updated_at):
         """
@@ -212,6 +215,13 @@ class Dumper():
         except Exception as e:
             logger.error('Error in dump_data() : %s', e)
             raise
+
+def remove_items_from_tmp(dir_path):
+    try:
+        os.unlink(dir_path)
+        shutil.rmtree(dir_path.split('.zip')[0])
+    except OSError as e:
+        logger.error('Error while deleting %s. Error: %s', dir_path, e)
 
 
 def send_email(from_email, to_email, subject, content):
