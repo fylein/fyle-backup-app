@@ -1,0 +1,21 @@
+.data-filter-body {
+    margin: 10px;
+    position: relative;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    padding: 20px;
+    background-color: #fff;
+    display: none;
+}
+
+.text-muted {
+    color: #818a91!important;
+}
+
+.datetimepicker-input {
+    align-items: baseline;
+}
+
+.datetimepicker-input {
+  margin-top: 0;
+}
