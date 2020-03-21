@@ -237,6 +237,10 @@ def send_email(from_email, to_email, subject, content):
 def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
     """
     Get a presigned URL and mail it to user
+    :param fyle_connection: fyle SDK connection
+    :param file_path: S3 object name
+    :param fyle_org_id: fyle org id to which user belongs
+    :param object_type: business object type eg: expenses
     """
     try:
         object_name = fyle_org_id +'/'+ file_path

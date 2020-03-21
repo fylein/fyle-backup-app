@@ -34,7 +34,6 @@ class ExpensesFetchView(View):
         refresh_token = backup.fyle_refresh_token
         fyle_org_id = backup.fyle_org_id
         name = backup.name
-
         # Fetch expenses matching the filters and dump into a local file
         fyle_connection = FyleSdkConnector(refresh_token)
         response_data = fyle_connection.extract_expenses(state=filters.get('state'),
@@ -47,7 +46,6 @@ class ExpensesFetchView(View):
             return HttpResponse(status=200)
         dumper = Dumper(fyle_connection, path=self.path, data=response_data, name=name,
                         fyle_org_id=fyle_org_id, download_attachments=download_attachments)
-
         try:
             file_path = dumper.dump_data()
             logger.info('Download Successful for backup_id: %s', backup_id)
@@ -59,7 +57,7 @@ class ExpensesFetchView(View):
             file_path = file_path.split('/')[2]
 
             # Get a secure URL for this backup and mail it to user
-            notify_user(fyle_connection, file_path, fyle_org_id, 'Expenes')
+            notify_user(fyle_connection, file_path, fyle_org_id, 'expenes')
 
             backup.file_path = file_path
             backup.current_state = 'READY'
