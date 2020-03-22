@@ -18,17 +18,15 @@ from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
 
+
 @method_decorator(login_required, name='dispatch')
 class HomeView(View):
     """
     User redirect post login
     """
     def get(self, request):
-        user = UserProfile.objects.values('refresh_token').get(email=request.user)
-        # On first ever user login, we fetch fyle refresh token
-        # and update this in the user model
-        if user.get('refresh_token') is None:
-            return redirect('/fyle/authorize/')
+        if request.user.refresh_token is None:
+            return redirect('/fyle/')
         return redirect('/main/expenses/')
 
 @method_decorator(login_required, name='dispatch')
@@ -158,6 +156,8 @@ class ExpensesView(View):
     """
     object_type = 'expenses'
     def get(self, request):
+        if request.user.refresh_token is None:
+            return redirect('/fyle/')
         # check this kind of invocation , should the get() be made static?
         bkp_view = BackupsView()
         response = bkp_view.get(request, self.object_type)

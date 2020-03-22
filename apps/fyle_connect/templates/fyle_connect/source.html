@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% load socialaccount %}
+
+{% block link %}
+    <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/connect.css' %}">
+{% endblock %}
+
+{% block sub-nav-heading %}Settings{% endblock %}
+
+{% block sub-nav-tabs %}
+    <li class="sub-nav-item">
+        <a class="sub-nav-link {{ source }}"
+           href="{% url 'fyle_connect-source'%}">Source</a>
+    </li>
+{% endblock %}
+
+{% block title %}Source{% endblock %}
+
+{% block content %}
+    <div class="login center-div">
+        {% if connected %}
+            <p>Connected to your Fyle account</p>
+            <button class="btn btn-lg main-btn" type="button" data-toggle="modal" data-target="#FyleDisconnectModal">Disconnect</button>
+        {% else %}
+            <p>Connect to your Fyle account</p>
+            <form action="{% url 'fyle-connect'%}" method="post">
+            {% csrf_token %}
+                <button class="btn btn-lg main-btn" type="submit">Connect</button>
+            </form>
+
+        {% endif %}
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="FyleDisconnectModal" tabindex="-1" role="dialog"
+         aria-labelledby="FyleDisconnectModalTitle" aria-hidden="true"
+         data-keyboard="false" data-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="FyleDisconnectModalTitle">Warning!</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="{% url 'fyle-disconnect'%}" method="post">
+              {% csrf_token %}
+              <div class="modal-body">
+                  <p>Are you sure you want to disconnect your Fyle account from Backup Application?</p>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btnInline cancelBtn" type="button" data-dismiss="modal">No</button>
+                <button class="btn btnInline saveBtn" type="submit">Yes</button>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+{% endblock %}

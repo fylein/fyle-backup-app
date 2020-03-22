@@ -1,15 +1,15 @@
-from .models import UserProfile
+from allauth.socialaccount.models import SocialAccount
+
 def user_data(request):
     """
     Context processor for Navbar
     :param request:
-    :return: user email
+    :return: username and organisation name
     """
     if request.user.is_authenticated:
         try:
-            # Extend this to return org name, and user name later
-            # user_details = UserProfile.objects.get(email=request.user)
-            return {'username': request.user.email}
-        except UserProfile.DoesNotExist:
+            user_details = SocialAccount.objects.get(user=request.user).extra_data['data']
+            return {'username': user_details.get('full_name'), 'org': user_details.get('org_name')}
+        except SocialAccount.DoesNotExist:
             return {}
     return {}

@@ -43,11 +43,11 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'fyle_allauth',
     'apps.user',
     'apps.fyle_connect',
     'apps.backups',
     'apps.data_fetcher',
-    'fyle_allauth',
     'tempus_dominus'
 ]
 
@@ -97,6 +97,14 @@ AUTHENTICATION_BACKENDS = (
 
 # Set custom user model
 AUTH_USER_MODEL = 'user.UserProfile'
+# For custom user model that has email as the user identifying field
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+# ACCOUNT_DEFAULT_HTTP_PROTOCOL = os.environ.get('DEFAULT_HTTP_PROTOCOL', config('DEFAULT_HTTP_PROTOCOL'))
 
 WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 
