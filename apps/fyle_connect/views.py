@@ -23,6 +23,7 @@ class SourceView(View):
                    "settings_tab": "active"}
         return render(request, self.template_name, context)
 
+@method_decorator(login_required, name='dispatch')
 class FyleConnectView(View):
     """
     Authorize access to Fyle Account
@@ -31,6 +32,7 @@ class FyleConnectView(View):
         fyle_oauth = FyleOAuth2()
         return redirect(fyle_oauth.authorise('states'))
 
+@method_decorator(login_required, name='dispatch')
 class FyleDisconnectView(View):
     """
     Authorize access to Fyle Account

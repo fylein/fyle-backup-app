@@ -176,27 +176,29 @@ class Dumper():
         logger.info('Downloading now')
 
         for expense_id in expense_ids:
-            attachment = fyle_connection.extract_attachments(expense_id)
-            attachment_data = attachment['data']
-            attachment_content = [item.get('content') for item in attachment_data]
+            try:
+                attachment = fyle_connection.extract_attachments(expense_id)
+                attachment_data = attachment['data']
+                attachment_content = [item.get('content') for item in attachment_data]
 
-            if attachment['data']:
-                attachment = attachment['data'][0]
-                attachment['expense_id'] = expense_id
-                attachment_names = [item.get('filename') for item in attachment_data]
+                if attachment['data']:
+                    attachment = attachment['data'][0]
+                    attachment['expense_id'] = expense_id
+                    attachment_names = [item.get('filename') for item in attachment_data]
 
-                for index, img_data in enumerate(attachment_content):
-                    img_data = (attachment_content[index])
-                    try:
+                    for index, img_data in enumerate(attachment_content):
+                        img_data = (attachment_content[index])
                         with open(dir_name + '/' + expense_id + '_' +
-                                  attachment_names[index], "wb") as fh:
-                            logger.info(' Downloading %s_%s', expense_id, attachment_names[index])
+                                    attachment_names[index], "wb") as fh:
+                            # logger.info(' Downloading %s_%s', expense_id,
+                            #             attachment_names[index])
                             fh.write(base64.b64decode(img_data))
-                            logger.info('%s_%s Download completed', expense_id,
-                                        attachment_names[index])
-                    except (OSError, csv.Error) as e:
-                        logger.error('CSV dump failed for %s, Error: %s', dir_name, e)
-                        raise
+                            # logger.info('%s_%s Download completed', expense_id,
+                            #              attachment_names[index])
+            except Exception as e:
+                logger.error('CSV dump failed for %s, Error: %s', attachment_names[index], e)
+                # We are logging the download filure and continuing further
+                continue
 
     def dump_data(self):
         """
@@ -207,9 +209,10 @@ class Dumper():
             dir_name = self.path + '{}-{}-Date--{}'.format(self.fyle_org_id, self.name, now)
             os.mkdir(dir_name)
             self.dump_csv(dir_name)
-            if self.download_attachments == 'on':
+            if self.download_attachments is True:
                 logger.info('Going to download attachment for backup: %s', self.name)
                 self.dump_attachments(dir_name)
+            logger.info('Attachment finished')
             shutil.make_archive(dir_name, 'zip', dir_name)
             logger.info('Archive file created at %s for ', dir_name)
             return dir_name+'.zip'
@@ -258,8 +261,8 @@ def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
         presigned_url = CloudStorage().create_presigned_url(object_name)
         user_data = fyle_connection.extract_employee_details()
         email_to = user_data.get('employee_email')
-        subject = 'The {0} Backup you requested from Fyle \
-            is ready for download'.format(object_type.capitalize())
+        subject = 'The {0} backup you requested from Fyle \
+            is ready for download'.format(object_type)
         content = render_to_string('email_body.html',{'link':presigned_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
     except Exception as e:
