@@ -4,6 +4,7 @@ import os
 import shutil
 import logging
 from datetime import datetime
+from django.template.loader import render_to_string
 import boto3
 from botocore.exceptions import ClientError
 from sendgrid import SendGridAPIClient
@@ -257,8 +258,10 @@ def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
         presigned_url = CloudStorage().create_presigned_url(object_name)
         user_data = fyle_connection.extract_employee_details()
         email_to = user_data.get('employee_email')
-        subject = 'The {0} Backup you requested from Fyle is ready for download'.format(object_type)
-        send_email(settings.SENDER_EMAIL_ID, email_to, subject, presigned_url)
+        subject = 'The {0} Backup you requested from Fyle \
+            is ready for download'.format(object_type.capitalize())
+        content = render_to_string('email_body.html',{'link':presigned_url})
+        send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
     except Exception as e:
         logger.error(e)
         raise

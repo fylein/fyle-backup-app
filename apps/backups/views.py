@@ -112,7 +112,7 @@ class BackupsView(View):
                     backup.save()
                     return redirect('/main/{0}/'.format(object_type))
                 messages.success(request, 'Your backup request has been submitted. \
-                             Once the file is generated we will email you the download\
+                             Once the file is generated we will send you the download\
                              link on the registered email id.')
                 return redirect('/main/{0}/'.format(object_type))
             messages.error(request, 'Something went wrong. Please try again!')
@@ -138,8 +138,7 @@ class BackupsNotifyView(View):
             fyle_connection = FyleSdkConnector(refresh_token)
             notify_user(fyle_connection, backup.file_path, backup.fyle_org_id,
                         backup.object_type)
-            messages.success(request, 'Your download request has been submitted. \
-                             Once the file is generated we will send you the download\
+            messages.success(request, 'We have sent you the download\
                              link by email.')
         except Backups.DoesNotExist:
             messages.error(request, 'You are not authorized to do that!')
@@ -164,4 +163,5 @@ class ExpensesView(View):
         response = json.loads(response.content).get('backups')
         form = ExpenseForm()
         return render(request, 'expenses.html', {'form': form, 'backup_list':response,
-                                                 'object_name': 'Expense'})
+                                                 'object_name': 'Expense',
+                                                 'expenses_tab': 'active'})

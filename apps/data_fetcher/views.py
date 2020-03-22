@@ -64,7 +64,7 @@ class ExpensesFetchView(View):
             # Get a secure URL for this backup and mail it to user
             notify_user(fyle_connection, object_name, fyle_org_id, 'expenes')
 
-            backup.file_path = file_path
+            backup.file_path = object_name
             backup.current_state = 'READY'
             backup.save()
             # Remove the files from local machine
