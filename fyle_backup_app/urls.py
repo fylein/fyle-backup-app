@@ -21,6 +21,7 @@ from apps.user.views import UserLoginView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', UserLoginView.as_view(), name='User login'),
+    path('accounts/social/login/cancelled/', UserLoginView.as_view()),
     path('accounts/', include('allauth.urls')),
     path('main/', include('apps.backups.urls')),
     path('fyle/', include('apps.fyle_connect.urls')),

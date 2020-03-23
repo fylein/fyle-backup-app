@@ -49,7 +49,7 @@ class OAuthCallbackView(View):
             return redirect('/main/expenses/')
         messages.error(request, 'Please Authorize Fyle Backup Application\
                        to access your Fyle Account.')
-        return redirect('/accounts/logout/')
+        return redirect('/')
 
 
 @method_decorator(login_required, name='dispatch')
@@ -156,6 +156,7 @@ class ExpensesView(View):
     object_type = 'expenses'
     def get(self, request):
         if request.user.refresh_token is None:
+            messages.error(request, 'Please connect your Fyle account!')
             return redirect('/fyle/')
         # check this kind of invocation , should the get() be made static?
         bkp_view = BackupsView()
