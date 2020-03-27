@@ -21,15 +21,12 @@ class FyleSdkConnector():
     Class with utils functions for FyleSDK
     """
     def __init__(self, refresh_token):
-        try:
-            self.connection = FyleSDK(
-                base_url=settings.BASE_URL,
-                client_id=settings.CLIENT_ID,
-                client_secret=settings.CLIENT_SECRET,
-                refresh_token=refresh_token
-            )
-        except Exception as e:
-            raise
+        self.connection = FyleSDK(
+            base_url=settings.BASE_URL,
+            client_id=settings.CLIENT_ID,
+            client_secret=settings.CLIENT_SECRET,
+            refresh_token=refresh_token
+        )
 
     def extract_expenses(self, state, approved_at, updated_at):
         """
@@ -263,7 +260,7 @@ def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
         email_to = user_data.get('employee_email')
         subject = 'The {0} backup you requested from Fyle \
             is ready for download'.format(object_type)
-        content = render_to_string('email_body.html',{'link':presigned_url})
+        content = render_to_string('email_body.html', {'link':presigned_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
     except Exception as e:
         logger.error(e)

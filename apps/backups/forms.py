@@ -13,19 +13,16 @@ class ExpenseForm(forms.Form):
         ('PAID', 'PAID'),
         ('APPROVED', 'APPROVED'),
         ('DRAFT', 'DRAFT'),
-        ('APPROVER_PENDING', 'APPROVER_PENDING'),
-        ('COMPLETE', 'COMPLETE')
+        ('APPROVER_PENDING', 'APPROVER PENDING'),
+        ('COMPLETE', 'COMPLETE'),
+        ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING')
     ]
     name = forms.CharField(max_length=64, label='Name*', widget=forms.TextInput(
         attrs={
             'placeholder': 'Provide a name for this backup',
             'autocomplete': 'off'
         }))
-    data_format = forms.ChoiceField(choices=data_format_choices, label='Format*',
-                                    widget=forms.Select(
-                                        attrs={
-                                            'class': 'selectpicker'
-                                        }))
+    data_format = forms.ChoiceField(widget=forms.HiddenInput(), initial='CSV')
     object_type = forms.CharField(widget=forms.HiddenInput(), initial='expenses')
     state = forms.MultipleChoiceField(choices=expense_state_choices,
                                       required=False)
