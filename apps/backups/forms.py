@@ -22,10 +22,12 @@ class ExpenseForm(forms.Form):
             'placeholder': 'Provide a name for this backup',
             'autocomplete': 'off'
         }))
-    data_format = forms.ChoiceField(widget=forms.HiddenInput(), initial='CSV')
+    data_format = forms.ChoiceField(widget=forms.HiddenInput(), choices=data_format_choices,
+                                    initial='CSV')
     object_type = forms.CharField(widget=forms.HiddenInput(), initial='expenses')
     state = forms.MultipleChoiceField(choices=expense_state_choices,
-                                      required=False)
+                                      required=False
+                                      )
     approved_at_gte = forms.DateField(widget=DatePicker(
         attrs={
             'icon_toggle': True,

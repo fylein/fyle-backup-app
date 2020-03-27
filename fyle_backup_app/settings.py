@@ -76,6 +76,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'apps.user.context_processors.user_data',
+                'apps.fyle_connect.context_processors.org_name',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',

@@ -48,8 +48,10 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, help_text="Staff user")
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
-    refresh_token = models.CharField(null=True, max_length=512, help_text='Refresh Token')
-    fyle_org_id = models.CharField(max_length=255, null=True, help_text='Organisation id in Fyle')
+    refresh_token = models.CharField(null=True, max_length=512,
+                                     help_text='Fyle refresh token of current active account')
+    fyle_org_id = models.CharField(max_length=255, null=True,
+                                   help_text='Fyle org id of current active account')
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'

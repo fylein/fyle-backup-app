@@ -39,4 +39,3 @@ $(function () {
         $('#id_updated_at_gte').datetimepicker('maxDate', e.date);
     });
 });
-toastr.info('Are you the 6 fingered man?')

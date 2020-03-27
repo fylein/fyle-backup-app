@@ -1,4 +1,5 @@
 from django.db import models
+from apps.user.models import UserProfile
 
 
 class ObjectLookup(models.Model):
@@ -17,8 +18,9 @@ class Backups(models.Model):
     Table to store user's backup request
     """
     id = models.AutoField(primary_key=True)
-    fyle_org_id = models.CharField(max_length=255, help_text='Organisation id in Fyle')
-    fyle_refresh_token = models.CharField(max_length=512, help_text='Refresh Token')
+    fyle_org_id = models.CharField(max_length=255, help_text='Fyle org_id of backup requester')
+    fyle_refresh_token = models.CharField(max_length=512, help_text='Fyle Refresh Token')
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     object_type = models.ForeignKey(ObjectLookup, on_delete=models.CASCADE)
     current_state = models.CharField(max_length=64, help_text="Current state of backup")
     name = models.CharField(max_length=64, help_text="Backup name")

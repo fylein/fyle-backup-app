@@ -19,3 +19,29 @@
 .datetimepicker-input {
   margin-top: 0;
 }
+
+.filter-row {
+    display: flex;
+    flex-direction: row;
+    margin:1.5%;
+}
+
+.filter-date {
+    margin-right:1.5%;
+}
+
+.filter-lbl {
+    width: 30%;
+    margin:0!important;
+    color: #464d57 !important;
+    font-weight: bold!important;
+}
+
+input[type=checkbox] {
+    margin-top: 1%!important;
+    width:auto;
+}
+
+input {
+    width:125%;
+}

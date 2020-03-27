@@ -12,8 +12,8 @@
 {% block content %}
     <div class="login center-div">
         {% if connected %}
-            <p>Connected to your Fyle account</p>
-            <button class="btn btn-lg main-btn" type="button" data-toggle="modal" data-target="#FyleDisconnectModal">Disconnect</button>
+            <p>Connected to your Fyle account <strong>{{current_org_name}}</strong></p>
+            <button class="btn btn-lg main-btn" type="button" data-toggle="modal" data-target="#FyleDisconnectModal">Switch Account</button>
         {% else %}
             <p>Connect to your Fyle account</p>
             <form action="{% url 'fyle-connect'%}" method="post">
@@ -38,8 +38,7 @@
           <form action="{% url 'fyle-disconnect'%}" method="post">
               {% csrf_token %}
               <div class="modal-body">
-                  <p>You will not be able to see your previous backups if you do this.</p>
-                  <p>Are you sure you want to disconnect your Fyle account from Backup Application?</p>
+                  <p>Are you sure you want to switch your Fyle account connected to Backup Application?</p>
               </div>
               <div class="modal-footer">
                 <button class="btn btnInline cancelBtn" type="button" data-dismiss="modal">No</button>

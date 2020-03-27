@@ -2,7 +2,7 @@ import json
 import logging
 from django.shortcuts import render, redirect
 from django.views import View
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -20,7 +20,6 @@ from fyle_backup_app import settings
 logger = logging.getLogger('app')
 
 
-@method_decorator(login_required, name='dispatch')
 class HomeView(View):
     """
     User redirect post login
@@ -28,10 +27,10 @@ class HomeView(View):
     def get(self, request):
         # Prompt the user to connect to fyle if needed
         if request.user.refresh_token is None:
-            return redirect('/fyle/')
+            return redirect('/fyle/connect/')
         return redirect('/main/expenses/')
 
-@method_decorator(login_required, name='dispatch')
+
 class OAuthCallbackView(View):
     """
     Callback view for Fyle Oauth
@@ -54,7 +53,6 @@ class OAuthCallbackView(View):
         return redirect('/')
 
 
-@method_decorator(login_required, name='dispatch')
 class BackupsView(View):
     """
     Insert/Get objects from backups table
@@ -63,7 +61,7 @@ class BackupsView(View):
         if object_type is None:
             return {'backups': None}
         backups_list = Backups.objects.filter(object_type_id__name=object_type,
-                                              fyle_refresh_token=request.user.refresh_token
+                                              user_id__email=request.user
                                              ).values('id', 'name',
                                                       'current_state',
                                                       'error_message', 'created_at')[:5]
@@ -78,15 +76,17 @@ class BackupsView(View):
                 fyle_org_id = request.user.fyle_org_id
                 object_type = data.get('object_type')
                 current_state = 'ONGOING'
-                name = data.get('name').replace(' ', '')
+                name = data.get('name')
                 bkp_filter_obj = BackupFilters(data, object_type)
                 filters = bkp_filter_obj.get_filters_for_object()
                 data_format = data.get('data_format')
                 object_type_obj = ObjectLookup.objects.get(name=object_type)
+                user = UserProfile.objects.get(email=request.user)
                 backup = Backups.objects.create(name=name, current_state=current_state,
                                                 object_type=object_type_obj, filters=filters,
                                                 data_format=data_format, fyle_org_id=fyle_org_id,
-                                                fyle_refresh_token=refresh_token
+                                                fyle_refresh_token=refresh_token,
+                                                user=user
                                                 )
 
                 # Schedule this backup using JobsInfra
@@ -117,22 +117,20 @@ class BackupsView(View):
             raise ValidationError(('Form data is invalid'), code='invalid')
 
         except (NotImplementedError, ValidationError) as excp:
-            logger.error('Error during backup creation for backup: %s . Error: %s',
-                         name, excp)
+            logger.error('Error during backup creation for backup: %s. Error: %s',
+                         request.POST.get('name'), excp)
             messages.error(request, 'Something went wrong. Please try again!')
             return redirect('/main/{0}/'.format(object_type))
 
 
-@method_decorator(login_required, name='dispatch')
 class BackupsNotifyView(View):
     """
     Send backup download link to user via email
     """
     def get(self, request, backup_id):
         try:
-            refresh_token = request.user.refresh_token
-            backup = Backups.objects.get(id=backup_id, fyle_refresh_token=refresh_token)
-            fyle_connection = FyleSdkConnector(refresh_token)
+            backup = Backups.objects.get(id=backup_id, user_id__email=request.user)
+            fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
             notify_user(fyle_connection, backup.file_path, backup.fyle_org_id,
                         backup.object_type)
             messages.success(request, 'We have sent you the download\
@@ -146,7 +144,6 @@ class BackupsNotifyView(View):
         return redirect('/main/{0}/'.format(backup.object_type))
 
 
-@method_decorator(login_required, name='dispatch')
 class ExpensesView(View):
     """
     Home view for Expenses
@@ -155,7 +152,7 @@ class ExpensesView(View):
     def get(self, request):
         if request.user.refresh_token is None:
             messages.error(request, 'Please connect your Fyle account!')
-            return redirect('/fyle/')
+            return redirect('/fyle/connect/')
         bkp_view = BackupsView()
         response = bkp_view.get(request, self.object_type)
         response = json.loads(response.content).get('backups')
