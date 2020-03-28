@@ -120,7 +120,7 @@ class BackupsView(View):
             logger.error('Error during backup creation for backup: %s. Error: %s',
                          request.POST.get('name'), excp)
             messages.error(request, 'Something went wrong. Please try again!')
-            return redirect('/main/{0}/'.format(object_type))
+            return redirect('/main/{0}/'.format(request.POST.get('object_type')))
 
 
 class BackupsNotifyView(View):

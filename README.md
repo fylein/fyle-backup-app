@@ -20,8 +20,9 @@ Multi-tenant self serve application to take backup of Fyle data
 4. Run ```python manage.py migrate``` to populate your database
 5. Run ```python manage.py createsuperuser``` and follow the instructions to create a superuser 
 6. Open django-admin and create a new record under Social Applications. Select Fyle as provider and enter your client_secret and client_id. Add our site to the Chosen sites on the bottom.
-7. Run ```python manage.py runserver``` to start the server on localhost
-8. You might want to comment out the FyleJobs section (```apps/backups/views.py```) during development 
+7. Create a log file at ```/var/log/fyle/fyle_backup.log```
+8. Run ```python manage.py runserver``` to start the server on localhost
+9. You might want to comment out the FyleJobs section (```apps/backups/views.py```) during development
 
 
 Visit [http://localhost:8000](http://localhost:8000) to access the application

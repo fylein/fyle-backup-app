@@ -200,6 +200,10 @@ FYLE_JOBS_CALLBACK_URL = config('FYLE_JOBS_CALLBACK_URL')
 SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 SENDER_EMAIL_ID = config('SENDER_EMAIL_ID')
 
+# Testing creds
+TEST_REFRESH_TOKEN = config('TEST_REFRESH_TOKEN')
+TEST_FYLE_ORG_ID = config('TEST_FYLE_ORG_ID')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
