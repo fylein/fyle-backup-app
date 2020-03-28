@@ -33,22 +33,19 @@ class ExpensesFetchView(View):
         download_attachments = filters.get('download_attachments')
         refresh_token = backup.fyle_refresh_token
         fyle_org_id = backup.fyle_org_id
-        name = backup.name
+        name = backup.name.replace(' ', '')
         # Fetch expenses matching the filters and dump into a local file
-        try:
-            fyle_connection = FyleSdkConnector(refresh_token)
-        except Exception as e:
-            logger.error('Could not get a connection through FyleSDKConnector for %s. Error: %s',
-                         backup_id, e)
-            return HttpResponse(status=500)
+        fyle_connection = FyleSdkConnector(refresh_token)
+        logger.info('Going to fetch data for backup_id: %s', backup_id)
         response_data = fyle_connection.extract_expenses(state=filters.get('state'),
                                                          approved_at=filters.get('approved_at'),
                                                          updated_at=filters.get('updated_at'))
         if not response_data:
             logger.info('No data found for backup_id: %s', backup_id)
-            backup.current_state = 'NO_DATA_FOUND'
+            backup.current_state = 'NO DATA FOUND'
             backup.save()
             return HttpResponse(status=200)
+        logger.info('Going to dump data to file for backup_id: %s', backup_id)
         dumper = Dumper(fyle_connection, path=self.path, data=response_data, name=name,
                         fyle_org_id=fyle_org_id, download_attachments=download_attachments)
         try:

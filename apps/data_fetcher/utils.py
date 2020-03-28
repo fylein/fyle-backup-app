@@ -60,7 +60,7 @@ class FyleSdkConnector():
 
 class CloudStorage():
     """
-    Utility class for fcloud file upload
+    Utility class for cloud file upload
     """
     def __init__(self, provider=None):
         """
@@ -169,8 +169,7 @@ class Dumper():
         if not expense_ids:
             logger.error('No attachments found for: %s', dir_name)
             return
-        logger.info('%s Expense(s) have attachment(s)', len(expense_ids))
-        logger.info('Downloading now')
+        logger.info('%s Expense(s) have attachment(s) . Downloading now.', len(expense_ids))
 
         for expense_id in expense_ids:
             try:
@@ -187,15 +186,11 @@ class Dumper():
                         img_data = (attachment_content[index])
                         with open(dir_name + '/' + expense_id + '_' +
                                     attachment_names[index], "wb") as fh:
-                            # logger.info(' Downloading %s_%s', expense_id,
-                            #             attachment_names[index])
                             fh.write(base64.b64decode(img_data))
                             # logger.info('%s_%s Download completed', expense_id,
                             #              attachment_names[index])
             except Exception as e:
-                logger.error('CSV dump failed for %s, Error: %s', attachment_names[index], e)
-                # We are logging the download filure and continuing further
-                continue
+                logger.error('Attachment dump failed for %s, Error: %s', attachment_names[index], e)
 
     def dump_data(self):
         """
@@ -209,9 +204,9 @@ class Dumper():
             if self.download_attachments is True:
                 logger.info('Going to download attachment for backup: %s', self.name)
                 self.dump_attachments(dir_name)
-            logger.info('Attachment finished')
+            logger.info('Attachment dump finished for %s', self.name)
             shutil.make_archive(dir_name, 'zip', dir_name)
-            logger.info('Archive file created at %s for ', dir_name)
+            logger.info('Archive file created at %s for %s', dir_name, self.name)
             return dir_name+'.zip'
         except Exception as e:
             logger.error('Error in dump_data() : %s', e)
@@ -223,6 +218,7 @@ def remove_items_from_tmp(dir_path):
         shutil.rmtree(dir_path.split('.zip')[0])
     except OSError as e:
         logger.error('Error while deleting %s. Error: %s', dir_path, e)
+        raise
 
 
 def send_email(from_email, to_email, subject, content):
@@ -242,7 +238,7 @@ def send_email(from_email, to_email, subject, content):
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
         sg_client.send(message)
     except Exception as e:
-        logger.error('Email sending failed due to: %s',e)
+        logger.error('Email sending failed due to: %s', e)
         raise
 
 def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
@@ -263,5 +259,5 @@ def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
         content = render_to_string('email_body.html', {'link':presigned_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
     except Exception as e:
-        logger.error(e)
+        logger.error('Error while notifying user due to %s', e)
         raise

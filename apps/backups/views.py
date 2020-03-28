@@ -4,18 +4,16 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError
 
 from apps.fyle_connect.utils import FyleOAuth2
 from apps.user.models import UserProfile
 from apps.backups.forms import ExpenseForm
 from apps.data_fetcher.utils import notify_user, FyleSdkConnector
+from fyle_backup_app import settings
+
 from .utils import FyleJobsSDK, BackupFilters
 from .models import Backups, ObjectLookup
-
-from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
 
@@ -70,6 +68,8 @@ class BackupsView(View):
     def post(self, request):
         try:
             form = ExpenseForm(request.POST)
+            logger.info('Got a backup request from %s with params: %s',
+                        request.user, request.POST)
             if form.is_valid():
                 data = form.cleaned_data
                 refresh_token = request.user.refresh_token
@@ -129,6 +129,8 @@ class BackupsNotifyView(View):
     """
     def get(self, request, backup_id):
         try:
+            logger.info('Got a notify request from user %s for backup_id: %s',
+                        request.user, backup_id)
             backup = Backups.objects.get(id=backup_id, user_id__email=request.user)
             fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
             notify_user(fyle_connection, backup.file_path, backup.fyle_org_id,

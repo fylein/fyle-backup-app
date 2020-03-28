@@ -1,9 +1,5 @@
 from django.shortcuts import redirect, render
 from django.views import View
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 
 from apps.fyle_connect.utils import FyleOAuth2
 from apps.user.models import UserProfile
