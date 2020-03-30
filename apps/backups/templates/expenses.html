@@ -26,12 +26,12 @@
             <div class="filter-row">
                 <label class="filter-lbl">State</label>
                 <div class="filter-input">
-                    <select class="selectpicker" title='If nothing is selected, all states willl be backed up'
-                            multiple data-live-search="true" name="state" id="id_state">
+                    <select class="selectpicker" multiple data-live-search="true"
+                        name="state" id="id_state">
                                 {% for choice, value in form.state.field.choices %}
                                     <option value={{choice}}>{{ value }}</option>
                                 {% endfor %}
-                        </select>
+                    </select>
                 </div>
             </div>
             <div class="filter-row">

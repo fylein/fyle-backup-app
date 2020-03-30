@@ -1,4 +1,4 @@
-from allauth.socialaccount.models import SocialAccount
+from apps.data_fetcher.utils import FyleSdkConnector
 
 def user_data(request):
     """
@@ -8,8 +8,9 @@ def user_data(request):
     """
     if request.user.is_authenticated:
         try:
-            user_details = SocialAccount.objects.get(user=request.user).extra_data['data']
+            fyle_sdk_connector = FyleSdkConnector(request.user.refresh_token)
+            user_details = fyle_sdk_connector.extract_employee_details()
             return {'username': user_details.get('full_name'), 'org': user_details.get('org_name')}
-        except SocialAccount.DoesNotExist:
+        except Exception as e:
             return {}
     return {}
