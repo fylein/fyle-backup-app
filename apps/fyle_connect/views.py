@@ -20,7 +20,7 @@ class FyleConnectView(View):
     """
     def get(self, request):
         fyle_oauth = FyleOAuth2()
-        return redirect(fyle_oauth.authorise('states'))
+        return redirect(fyle_oauth.authorize('states'))
 
 class FyleDisconnectView(View):
     """
