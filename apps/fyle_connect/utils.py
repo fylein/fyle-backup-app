@@ -18,9 +18,9 @@ class FyleOAuth2():
         self.redirect_uri = settings.REDIRECT_URI
         self.token_url = settings.TOKEN_URI
 
-    def authorise(self, state):
+    def authorize(self, state):
         """
-        Initiates the Fyle OAuth2.0 Authorise flow
+        Initiates the Fyle OAuth2.0 Authorize flow
         :param state:
         :return:
         """

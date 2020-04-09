@@ -12,7 +12,7 @@ from apps.backups.forms import ExpenseForm
 from apps.data_fetcher.utils import notify_user, FyleSdkConnector
 from fyle_backup_app import settings
 
-from .utils import FyleJobsSDK, BackupFilters
+from .utils import create_backup, schedule_backup
 from .models import Backups, ObjectLookup
 
 logger = logging.getLogger('app')
@@ -58,11 +58,11 @@ class BackupsView(View):
     def get(self, request, object_type=None):
         if object_type is None:
             return {'backups': None}
-        backups_list = Backups.objects.filter(object_type_id__name=object_type,
+        backups_list = Backups.objects.filter(object_type=ObjectLookup[object_type],
                                               user_id__email=request.user
-                                             ).values('id', 'name',
-                                                      'current_state',
-                                                      'error_message', 'created_at')[:5]
+                                             ).values('id', 'name', 'current_state',
+                                                      'error_message',
+                                                      'created_at')[:settings.BACKUPS_LIMIT]
         return JsonResponse({"backups": list(backups_list)})
 
     def post(self, request):
@@ -70,53 +70,23 @@ class BackupsView(View):
             form = ExpenseForm(request.POST)
             logger.info('Got a backup request from %s with params: %s',
                         request.user, request.POST)
-            if form.is_valid():
-                data = form.cleaned_data
-                refresh_token = request.user.refresh_token
-                fyle_org_id = request.user.fyle_org_id
-                object_type = data.get('object_type')
-                current_state = 'ONGOING'
-                name = data.get('name')
-                bkp_filter_obj = BackupFilters(data, object_type)
-                filters = bkp_filter_obj.get_filters_for_object()
-                data_format = data.get('data_format')
-                object_type_obj = ObjectLookup.objects.get(name=object_type)
-                user = UserProfile.objects.get(email=request.user)
-                backup = Backups.objects.create(name=name, current_state=current_state,
-                                                object_type=object_type_obj, filters=filters,
-                                                data_format=data_format, fyle_org_id=fyle_org_id,
-                                                fyle_refresh_token=refresh_token,
-                                                user=user
-                                                )
+            if not form.is_valid():
+                raise ValidationError(('Form data is invalid'), code='invalid')
 
-                # Schedule this backup using JobsInfra
-                fyle_sdk_connector = FyleSdkConnector(refresh_token)
-                fyle_sdk_connection = fyle_sdk_connector.connection
-                jobs = FyleJobsSDK(fyle_sdk_connection)
-                created_job = jobs.trigger_now(
-                    callback_url='{0}{1}'.format(settings.FYLE_JOBS_CALLBACK_URL,
-                                                 '{0}/'.format(object_type)),
-                    callback_method='POST',
-                    object_id=backup.id,
-                    payload={'backup_id': backup.id},
-                    job_description='Fetch backup_id {0} for user: {1}'.format(
-                        backup.id, self.request.user
-                    ))
-                if created_job is None:
-                    logger.error('Backup_id: %s not scheduled. Task creation failed.', backup.id)
-                    backup.current_state = 'FAILED'
-                    backup.save()
-                    messages.error(request, 'Something went wrong. Please try again!')
-                    return redirect('/main/{0}/'.format(object_type))
-                backup.task_id = created_job['id']
-                backup.save()
-                messages.success(request, 'Your backup request has been submitted. \
-                             Once the file is generated we will send you the download\
-                             link on the registered email id.')
+            data = form.cleaned_data
+            object_type = data.get('object_type')
+            backup = create_backup(request, data)
+            created_job = schedule_backup(request, backup)
+            if not created_job:
+                messages.error(request, 'Something went wrong. Please try again!')
                 return redirect('/main/{0}/'.format(object_type))
-            raise ValidationError(('Form data is invalid'), code='invalid')
 
-        except (NotImplementedError, ValidationError) as excp:
+            messages.success(request, 'Your backup request has been submitted. \
+                            Once the file is generated we will send you the download\
+                            link on the registered email id.')
+            return redirect('/main/{0}/'.format(object_type))
+
+        except Exception as excp:
             logger.error('Error during backup creation for backup: %s. Error: %s',
                          request.POST.get('name'), excp)
             messages.error(request, 'Something went wrong. Please try again!')
@@ -133,17 +103,19 @@ class BackupsNotifyView(View):
                         request.user, backup_id)
             backup = Backups.objects.get(id=backup_id, user_id__email=request.user)
             fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
+            object_type = ObjectLookup(backup.object_type).label.lower()
             notify_user(fyle_connection, backup.file_path, backup.fyle_org_id,
-                        backup.object_type)
+                        object_type)
             messages.success(request, 'We have sent you the download\
                              link by email.')
+            return redirect('/main/{0}/'.format(object_type))
         except Backups.DoesNotExist:
-            messages.error(request, 'You are not authorized to do that!')
+            messages.error(request, 'Did not find a backup for this id.')
         except Exception as excp:
             logger.error('Error while notifying user for backup_id: %s. Error: %s',
                          backup_id, excp)
             messages.error(request, 'Something went wrong. Please try again!')
-        return redirect('/main/{0}/'.format(backup.object_type))
+        return redirect('/main/expenses/')
 
 
 class ExpensesView(View):

@@ -2,6 +2,7 @@ import base64
 import csv
 import os
 import shutil
+import json
 import logging
 from datetime import datetime
 from django.template.loader import render_to_string
@@ -241,6 +242,7 @@ def send_email(from_email, to_email, subject, content):
         logger.error('Email sending failed due to: %s', e)
         raise
 
+
 def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
     """
     Get a presigned URL and mail it to user
@@ -254,10 +256,63 @@ def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
         presigned_url = CloudStorage().create_presigned_url(object_name)
         user_data = fyle_connection.extract_employee_details()
         email_to = user_data.get('employee_email')
-        subject = 'The {0} backup you requested from Fyle \
-            is ready for download'.format(object_type)
+        subject = 'The {0} backup you requested from Fyle\
+                   is ready for download'.format(object_type.capitalize())
         content = render_to_string('email_body.html', {'link':presigned_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
     except Exception as e:
         logger.error('Error while notifying user due to %s', e)
         raise
+
+
+def fetch_and_notify_expenses(backup):
+    """
+    Fetch expenses matching the filters, upload to cloud,
+    notify user via email
+    :param backup: backup object for which expense needs to be procesed
+    :return : False for errored cases, True otherwise
+    """
+    backup_id = backup.id
+    filters = json.loads(backup.filters)
+    download_attachments = filters.get('download_attachments')
+    refresh_token = backup.fyle_refresh_token
+    fyle_org_id = backup.fyle_org_id
+    name = backup.name.replace(' ', '')
+    fyle_connection = FyleSdkConnector(refresh_token)
+    logger.info('Going to fetch data for backup_id: %s', backup_id)
+    response_data = fyle_connection.extract_expenses(state=filters.get('state'),
+                                                     approved_at=filters.get('approved_at'),
+                                                     updated_at=filters.get('updated_at'))
+    if not response_data:
+        logger.info('No data found for backup_id: %s', backup_id)
+        backup.current_state = 'NO DATA FOUND'
+        backup.save()
+        return True
+
+    logger.info('Going to dump data to file for backup_id: %s', backup_id)
+    dumper = Dumper(fyle_connection, path=settings.DOWNLOAD_PATH, data=response_data, name=name,
+                    fyle_org_id=fyle_org_id, download_attachments=download_attachments)
+    try:
+        file_path = dumper.dump_data()
+        logger.info('Download Successful for backup_id: %s', backup_id)
+
+        cloud_store = CloudStorage()
+        cloud_store.upload(file_path, fyle_org_id)
+        logger.info('Cloud upload Successful for backup_id: %s', backup_id)
+        # Get only the object name for db save
+        object_name = file_path.split('/')[2]
+
+        # Get a secure URL for this backup and mail it to user
+        notify_user(fyle_connection, object_name, fyle_org_id, 'expenes')
+
+        backup.file_path = object_name
+        backup.current_state = 'READY'
+        backup.save()
+        # Remove the files from local machine
+        remove_items_from_tmp(file_path)
+        return True
+    except Exception as e:
+        backup.current_state = 'FAILED'
+        backup.save()
+        logger.error('Backup process failed for bkp_id: %s . Error: %s', backup_id, e)
+        return False

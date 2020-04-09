@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-from decouple import config
 from django.contrib.messages import constants as messages
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,12 +21,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True if os.environ.get('DEBUG') == 'True' else False
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -106,7 +105,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_AUTO_SIGNUP = True
-# ACCOUNT_DEFAULT_HTTP_PROTOCOL = os.environ.get('DEFAULT_HTTP_PROTOCOL', config('DEFAULT_HTTP_PROTOCOL'))
 
 WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 
@@ -117,11 +115,11 @@ WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
 
@@ -175,34 +173,36 @@ MESSAGE_TAGS = {
 }
 
 # Fyle OAuth2.0
-BASE_URL = config('BASE_URL')
-FYLE_BASE_URL = config('FYLE_BASE_URL')
-CLIENT_ID = config('CLIENT_ID')
-CLIENT_SECRET = config('CLIENT_SECRET')
-AUTHORIZE_URI = config('AUTHORIZE_URI').format(FYLE_BASE_URL)
-REDIRECT_URI = config('REDIRECT_URI')
-TOKEN_URI = config('TOKEN_URI').format(FYLE_BASE_URL)
+BASE_URL = os.environ.get('BASE_URL')
+FYLE_BASE_URL = os.environ.get('FYLE_BASE_URL')
+CLIENT_ID = os.environ.get('CLIENT_ID')
+CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
+AUTHORIZE_URI = os.environ.get('AUTHORIZE_URI').format(FYLE_BASE_URL)
+REDIRECT_URI = os.environ.get('REDIRECT_URI')
+TOKEN_URI = os.environ.get('TOKEN_URI').format(FYLE_BASE_URL)
 
-DOWNLOAD_PATH = config('DOWNLOAD_PATH')
-CLOUD_STORAGE_PROVIDER = config('CLOUD_STORAGE_PROVIDER')
+DOWNLOAD_PATH = os.environ.get('DOWNLOAD_PATH')
+CLOUD_STORAGE_PROVIDER = os.environ.get('CLOUD_STORAGE_PROVIDER')
 
 # AWS details
-AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-S3_BUCKET_NAME = config('S3_BUCKET_NAME')
-S3_REGION_NAME = config('S3_REGION_NAME')
-PRESIGNED_URL_EXPIRY = config('PRESIGNED_URL_EXPIRY')
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+S3_REGION_NAME = os.environ.get('S3_REGION_NAME')
+PRESIGNED_URL_EXPIRY = os.environ.get('PRESIGNED_URL_EXPIRY')
 
-FYLE_JOBS_URL = config('FYLE_JOBS_URL')
-FYLE_JOBS_CALLBACK_URL = config('FYLE_JOBS_CALLBACK_URL')
+FYLE_JOBS_URL = os.environ.get('FYLE_JOBS_URL')
+FYLE_JOBS_CALLBACK_URL = os.environ.get('FYLE_JOBS_CALLBACK_URL')
 
 # Email settings
-SENDGRID_API_KEY = config('SENDGRID_API_KEY')
-SENDER_EMAIL_ID = config('SENDER_EMAIL_ID')
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+SENDER_EMAIL_ID = os.environ.get('SENDER_EMAIL_ID')
 
 # Testing creds
-TEST_REFRESH_TOKEN = config('TEST_REFRESH_TOKEN')
-TEST_FYLE_ORG_ID = config('TEST_FYLE_ORG_ID')
+TEST_REFRESH_TOKEN = os.environ.get('TEST_REFRESH_TOKEN')
+TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')
+
+BACKUPS_LIMIT = 5
 
 LOGGING = {
     'version': 1,

@@ -15,7 +15,8 @@ class ExpenseForm(forms.Form):
         ('DRAFT', 'DRAFT'),
         ('APPROVER_PENDING', 'APPROVER PENDING'),
         ('COMPLETE', 'COMPLETE'),
-        ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING')
+        ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING'),
+        ('PAYMENT_PENDING', 'PAYMENT PENDING')
     ]
     name = forms.CharField(max_length=64, label='Name*', widget=forms.TextInput(
         attrs={
