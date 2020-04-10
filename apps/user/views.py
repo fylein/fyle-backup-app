@@ -9,5 +9,5 @@ class UserLoginView(View):
     template_name = "user/login.html"
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('/main/home/')
+            return redirect('/main/expenses/')
         return render(request, self.template_name)

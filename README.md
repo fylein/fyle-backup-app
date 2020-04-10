@@ -24,6 +24,7 @@ Multi-tenant self serve application to take backup of Fyle data
 8. Create a log file at ```/var/log/fyle/fyle_backup.log```
 9. Run ```python manage.py runserver``` to start the server on localhost
 10. You might want to comment out the FyleJobs section (```apps/backups/views.py```) during development
+11. Run ```python manage.py collectstatic``` to collect static files to static_root directory, before deploying onto a Prod server
 
 
 Visit [http://localhost:8000](http://localhost:8000) to access the application
