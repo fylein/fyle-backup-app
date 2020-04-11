@@ -23,10 +23,18 @@ class HomeView(View):
     User redirect post login
     """
     def get(self, request):
-        # Prompt the user to connect to fyle if needed
-        if request.user.refresh_token is None:
-            return redirect('/fyle/connect/')
-        return redirect('/main/expenses/')
+        # Update refresh_token and org_id of user model to
+        # that of currently logged in org
+        try:
+            current_org = request.user.socialaccount_set.get(provider="fyle")
+            user = UserProfile.objects.get(email=request.user)
+            user.refresh_token = current_org.socialtoken_set.first().token_secret
+            user.fyle_org_id = current_org.extra_data.get('data').get('org_id')
+            user.save()
+            return redirect('/main/expenses/')
+        except Exception as excp:
+            logger.error('Exception in main/home view. Error: %s', excp)
+            return redirect('/')
 
 
 class OAuthCallbackView(View):
