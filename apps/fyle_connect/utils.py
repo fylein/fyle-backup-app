@@ -12,11 +12,11 @@ class FyleOAuth2():
         """
         initialize from settings
         """
-        self.client_id = settings.CLIENT_ID
-        self.client_secret = settings.CLIENT_SECRET
-        self.authorize_uri = settings.AUTHORIZE_URI
-        self.redirect_uri = settings.REDIRECT_URI
-        self.token_url = settings.TOKEN_URI
+        self.client_id = settings.FYLE_CLIENT_ID
+        self.client_secret = settings.FYLE_CLIENT_SECRET
+        self.authorize_uri = settings.FYLE_AUTHORIZE_URI
+        self.redirect_uri = settings.FYLE_CALLBACK_URI
+        self.token_url = settings.FYLE_TOKEN_URI
 
     def authorize(self, state):
         """

@@ -23,9 +23,9 @@ class FyleSdkConnector():
     """
     def __init__(self, refresh_token):
         self.connection = FyleSDK(
-            base_url=settings.BASE_URL,
-            client_id=settings.CLIENT_ID,
-            client_secret=settings.CLIENT_SECRET,
+            base_url=settings.FYLE_BASE_URL,
+            client_id=settings.FYLE_CLIENT_ID,
+            client_secret=settings.FYLE_CLIENT_SECRET,
             refresh_token=refresh_token
         )
 

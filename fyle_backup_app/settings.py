@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
+import sys
 import os
 
 from django.contrib.messages import constants as messages
@@ -25,7 +26,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.environ.get('DEBUG') == 'True' else False
-
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
 
 
@@ -114,8 +114,11 @@ WSGI_APPLICATION = 'fyle_backup_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get('DB_NAME'),
+        'OPTIONS': {
+            'options': '-c search_path={0}'.format(os.environ.get('DB_SCHEMA'))
+        },
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
@@ -173,13 +176,13 @@ MESSAGE_TAGS = {
 }
 
 # Fyle OAuth2.0
-BASE_URL = os.environ.get('BASE_URL')
 FYLE_BASE_URL = os.environ.get('FYLE_BASE_URL')
-CLIENT_ID = os.environ.get('CLIENT_ID')
-CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
-AUTHORIZE_URI = os.environ.get('AUTHORIZE_URI').format(FYLE_BASE_URL)
-REDIRECT_URI = os.environ.get('REDIRECT_URI')
-TOKEN_URI = os.environ.get('TOKEN_URI').format(FYLE_BASE_URL)
+FYLE_BASE_URL = os.environ.get('FYLE_BASE_URL')
+FYLE_CLIENT_ID = os.environ.get('FYLE_CLIENT_ID')
+FYLE_CLIENT_SECRET = os.environ.get('FYLE_CLIENT_SECRET')
+FYLE_AUTHORIZE_URI = os.environ.get('FYLE_AUTHORIZE_URI').format(FYLE_BASE_URL)
+FYLE_CALLBACK_URI = os.environ.get('FYLE_CALLBACK_URI')
+FYLE_TOKEN_URI = os.environ.get('FYLE_TOKEN_URI').format(FYLE_BASE_URL)
 
 DOWNLOAD_PATH = os.environ.get('DOWNLOAD_PATH')
 CLOUD_STORAGE_PROVIDER = os.environ.get('CLOUD_STORAGE_PROVIDER')
@@ -202,41 +205,23 @@ SENDER_EMAIL_ID = os.environ.get('SENDER_EMAIL_ID')
 TEST_REFRESH_TOKEN = os.environ.get('TEST_REFRESH_TOKEN')
 TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')
 
+
 BACKUPS_LIMIT = 5
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format' : "[%(asctime)s] %(process)d %(levelname)s \
-                         [%(module)s %(name)s %(funcName)s():%(lineno)s]: %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
-        },
-        'simple': {
-            'format': '%(process)d%(levelname)s %(message)s'
-        },
-    },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/fyle/fyle_backup.log',
-            'formatter': 'verbose',
-        },
-        'null': {
-            'class': 'logging.NullHandler',
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stderr
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['null'],
-            'propagate': True,
-            'level': 'INFO',
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
         },
-        'app': {
-            'handlers': ['file'],
-            'level': 'INFO',
-        }
-    }
+    },
 }
