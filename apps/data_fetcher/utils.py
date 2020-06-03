@@ -59,6 +59,28 @@ class FyleSdkConnector():
         employee_data = self.connection.Employees.get_my_profile()
         return employee_data.get('data')
 
+    def upload_file_to_aws(file_path):
+        """
+        Upload file to AWS S3 using FyleSDk
+        :param file_path: Location to the file
+        return: [file_id, file_url]
+        """
+        fyle_connection = self.connection
+
+        mime = magic.Magic(mime=True)
+        content_type = mime.from_file(file_path)
+        file_data = open(file_path, 'rb').read()
+
+        file_obj = fyle_connection.Files.post(file_path)
+        upload_url = fyle_connection.Files.create_upload_url(file_obj['id'])['url']
+        fyle_connection.Files.upload_file_to_aws(content_type, file_data, upload_url)
+        response = fyle_connection.Files.create_download_url(file_obj['id'])
+
+        val = {}
+        val['fyle_file_id'] = file_obj['id']
+        val['file_url'] = response['url']
+
+        return val
 
 
 class Dumper():
@@ -211,8 +233,8 @@ def upload_file_to_aws(refresh_token, file_path):
     return: [file_id, file_url]
     """
     fyle_connection = FyleSDK(
-        settings.FYLE_BASE_URL, settings.FYLE_CLIENT_ID, 
-        settings.FYLE_CLIENT_SECRET, refresh_token
+            settings.FYLE_BASE_URL, settings.FYLE_CLIENT_ID, 
+            settings.FYLE_CLIENT_SECRET, refresh_token
         )
 
     mime = magic.Magic(mime=True)
@@ -261,7 +283,7 @@ def fetch_and_notify_expenses(backup):
         file_path = dumper.dump_data()
         logger.info('Download Successful for backup_id: %s', backup_id)
 
-        response = upload_file_to_aws(backup.fyle_refresh_token, file_path)
+        response = upload_file_to_aws(file_path)
 
         logger.info('Cloud upload Successful for backup_id: %s', backup_id)
 
