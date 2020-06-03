@@ -201,6 +201,16 @@ FYLE_JOBS_CALLBACK_URL = os.environ.get('FYLE_JOBS_CALLBACK_URL')
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 SENDER_EMAIL_ID = os.environ.get('SENDER_EMAIL_ID')
 
+
+#New Addition - Send Email from Django
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST:  'localhost'
+EMAIL_PORT: 1025
+EMAIL_HOST_USER: ''
+EMAIL_HOST_PASSWORD: ''
+EMAIL_USE_TLS: False
+EMAIL_USE_SSL: False
+
 # Testing creds
 TEST_REFRESH_TOKEN = os.environ.get('TEST_REFRESH_TOKEN')
 TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')

@@ -4,13 +4,14 @@ import os
 import shutil
 import json
 import logging
+import magic
+import traceback
+import requests
 from datetime import datetime
 from django.template.loader import render_to_string
 import boto3
 from botocore.exceptions import ClientError
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
+from django.core.mail import send_mail
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
 
@@ -58,67 +59,6 @@ class FyleSdkConnector():
         employee_data = self.connection.Employees.get_my_profile()
         return employee_data.get('data')
 
-
-class CloudStorage():
-    """
-    Utility class for cloud file upload
-    """
-    def __init__(self, provider=None):
-        """
-        :param provider: cloud provider, awss3 by default
-        """
-        if provider is None:
-            provider = settings.CLOUD_STORAGE_PROVIDER
-        self.provider = provider
-
-    def s3_upload_file(self, path, fyle_org_id):
-        """
-        Upload a file to AWS S3
-        :param path: path to find the local file
-        /tmp/ormsDa8NCYdL-sample1-Date--17-03-2020-16:19:22.zip
-        :param fyle_org_id: fyle org_id of the user
-        :return: True if uploaded False otherwise
-        """
-        file_name = path
-        object_name = fyle_org_id +'/'+ path.split('/')[2]
-        s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
-        try:
-            s3_client.upload_file(file_name, settings.S3_BUCKET_NAME, object_name)
-        except ClientError as e:
-            logging.error('Error while uploading to s3 for oject %s. Error: %s', object_name, e)
-            raise
-
-    def upload(self, path, fyle_org_id):
-        """
-        Factory method to upload file to cloud storage
-        :param path: path to find the local file
-        :param fyle_org_id: fyle org_id of the user
-        """
-        if self.provider == 'awss3':
-            return self.s3_upload_file(path, fyle_org_id)
-        raise NotImplementedError
-
-    @staticmethod
-    def create_presigned_url(object_name):
-        """Generate a presigned URL to share an S3 object
-
-        :param object_name: string - s3 object name
-        :return: Presigned URL as string. If error, returns None.
-        """
-        s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                                 region_name=settings.S3_REGION_NAME)
-        try:
-            response = s3_client.generate_presigned_url('get_object',
-                                                        Params={'Bucket': settings.S3_BUCKET_NAME,
-                                                                'Key': object_name},
-                                                        ExpiresIn=settings.PRESIGNED_URL_EXPIRY)
-        except ClientError as e:
-            logging.error('Presigned url creation failure for object: %s. Error: %s',
-                          object_name, e)
-            raise
-        return response
 
 
 class Dumper():
@@ -231,39 +171,64 @@ def send_email(from_email, to_email, subject, content):
     :param content: email body
     """
     try:
-        message = Mail(
-                        from_email=from_email,
-                        to_emails=to_email,
-                        subject=subject,
-                        html_content=content)
-        sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        sg_client.send(message)
+        send_mail(
+            subject,
+            content,
+            from_email,
+            [to_email],
+            fail_silently=False,
+        )
+
     except Exception as e:
-        logger.error('Email sending failed due to: %s', e)
-        raise
+        error = traceback.format_exc()
+        logger.error('Email sending failed due to: %s, Traceback: %s', e, error)
 
 
-def notify_user(fyle_connection, file_path, fyle_org_id, object_type):
+def notify_user(fyle_connection, download_url, object_type):
     """
     Get a presigned URL and mail it to user
     :param fyle_connection: fyle SDK connection
-    :param file_path: S3 object name
-    :param fyle_org_id: fyle org id to which user belongs
+    :param download_url: signed URL name
     :param object_type: business object type eg: expenses
     """
     try:
-        object_name = fyle_org_id +'/'+ file_path
-        presigned_url = CloudStorage().create_presigned_url(object_name)
         user_data = fyle_connection.extract_employee_details()
         email_to = user_data.get('employee_email')
         subject = 'The {0} backup you requested from Fyle\
                    is ready for download'.format(object_type.capitalize())
-        content = render_to_string('email_body.html', {'link':presigned_url})
+        content = render_to_string('email_body.html', {'link':download_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
+        print('Signed Download URL: ', download_url)
+
     except Exception as e:
         logger.error('Error while notifying user due to %s', e)
         raise
 
+def upload_file_to_aws(refresh_token, file_path):
+    """
+    Upload file to AWS S3 using FyleSDk
+    :param file_path: Location to the file
+    return: [file_id, file_url]
+    """
+    fyle_connection = FyleSDK(
+        settings.FYLE_BASE_URL, settings.FYLE_CLIENT_ID, 
+        settings.FYLE_CLIENT_SECRET, refresh_token
+        )
+
+    mime = magic.Magic(mime=True)
+    content_type = mime.from_file(file_path)
+    file_data = open(file_path, 'rb').read()
+
+    file_obj = fyle_connection.Files.post(file_path)
+    upload_url = fyle_connection.Files.create_upload_url(file_obj['id'])['url']
+    fyle_connection.Files.upload_file_to_aws(content_type, file_data, upload_url)
+    response = fyle_connection.Files.create_download_url(file_obj['id'])
+
+    val = {}
+    val['fyle_file_id'] = file_obj['id']
+    val['file_url'] = response['url']
+
+    return val
 
 def fetch_and_notify_expenses(backup):
     """
@@ -296,16 +261,14 @@ def fetch_and_notify_expenses(backup):
         file_path = dumper.dump_data()
         logger.info('Download Successful for backup_id: %s', backup_id)
 
-        cloud_store = CloudStorage()
-        cloud_store.upload(file_path, fyle_org_id)
+        response = upload_file_to_aws(backup.fyle_refresh_token, file_path)
+
         logger.info('Cloud upload Successful for backup_id: %s', backup_id)
-        # Get only the object name for db save
-        object_name = file_path.split('/')[2]
 
         # Get a secure URL for this backup and mail it to user
-        notify_user(fyle_connection, object_name, fyle_org_id, 'expenes')
+        notify_user(fyle_connection, response['file_url'], 'expense')
 
-        backup.file_path = object_name
+        backup.fyle_file_id = response['fyle_file_id']
         backup.current_state = 'READY'
         backup.save()
         # Remove the files from local machine
@@ -314,5 +277,6 @@ def fetch_and_notify_expenses(backup):
     except Exception as e:
         backup.current_state = 'FAILED'
         backup.save()
-        logger.error('Backup process failed for bkp_id: %s . Error: %s', backup_id, e)
+        error = traceback.format_exc()
+        logger.error('Backup process failed for bkp_id: %s . Error: %s , Traceback: %s', backup_id, e, error)
         return False
