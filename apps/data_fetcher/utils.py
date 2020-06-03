@@ -283,7 +283,7 @@ def fetch_and_notify_expenses(backup):
         file_path = dumper.dump_data()
         logger.info('Download Successful for backup_id: %s', backup_id)
 
-        response = upload_file_to_aws(file_path)
+        response = fyle_connection.upload_file_to_aws(file_path)
 
         logger.info('Cloud upload Successful for backup_id: %s', backup_id)
 
