@@ -4,7 +4,6 @@ import os
 import shutil
 import json
 import logging
-import magic
 import traceback
 import requests
 from datetime import datetime
@@ -67,8 +66,7 @@ class FyleSdkConnector():
         """
         fyle_connection = self.connection
 
-        mime = magic.Magic(mime=True)
-        content_type = mime.from_file(file_path)
+        content_type = 'application/zip'
         file_data = open(file_path, 'rb').read()
 
         file_obj = fyle_connection.Files.post(file_path)

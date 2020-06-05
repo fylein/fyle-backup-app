@@ -105,6 +105,6 @@ def schedule_backup(request, backup):
         backup.task_id = created_job['id']
         backup.save()
         return True
-    except Exception as excp:
+    except Exception:
         error = traceback.format_exc()
         logger.error('Exception occured while scheduling backup_id: %s, Traceback: ', backup.id, error)
