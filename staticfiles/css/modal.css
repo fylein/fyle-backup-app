@@ -1,0 +1,49 @@
+.modal-footer {
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .modal-footer>:not(:last-child) {
+    margin-right: 0;
+    border-radius: 0;
+    background: var(--white);
+    border-right: 1px solid var(--lightGrey);
+  }
+  
+  .modal-footer>:not(:first-child) {
+    margin-left: 0;
+    border-radius: 0;
+    background: var(--white);
+    border-left: 1px solid var(--lightGrey);
+  }
+  
+  .modal-body {
+    padding: 15px 15px 20px;
+  }
+  
+  .btnInline {
+    width: 50%;
+    padding: 10px;
+    display: inline-block;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  
+  .cancelBtn:hover {
+    background-color: var(--darkGrey);
+    color: var(--white);
+  }
+  
+  .saveBtn:hover {
+    background-color: var(--primaryColor);
+    color: var(--white);
+  }
+  
+  .modal-title {
+    font-size: 18px;
+  }
+  
+  .modal-content {
+    width: 80%;
+    height: 50%;
+  }
