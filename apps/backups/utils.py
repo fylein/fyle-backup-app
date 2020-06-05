@@ -91,7 +91,6 @@ def schedule_backup(request, backup):
         jobs = fyle_sdk_connection.Jobs
         org_user_id = fyle_sdk_connection.Employees.get_my_profile()['data']['id']
         object_type = request.POST.get('object_type')
-        print('backup_id: %s', backup.id)
         created_job = jobs.trigger_now(
             callback_url='{0}{1}/'.format(settings.FYLE_JOBS_CALLBACK_URL,
                                           object_type),
