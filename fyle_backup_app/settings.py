@@ -185,21 +185,9 @@ FYLE_CALLBACK_URI = os.environ.get('FYLE_CALLBACK_URI')
 FYLE_TOKEN_URI = os.environ.get('FYLE_TOKEN_URI').format(FYLE_BASE_URL)
 
 DOWNLOAD_PATH = os.environ.get('DOWNLOAD_PATH')
-CLOUD_STORAGE_PROVIDER = os.environ.get('CLOUD_STORAGE_PROVIDER')
-
-# AWS details
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-S3_REGION_NAME = os.environ.get('S3_REGION_NAME')
-PRESIGNED_URL_EXPIRY = os.environ.get('PRESIGNED_URL_EXPIRY')
 
 FYLE_JOBS_URL = os.environ.get('FYLE_JOBS_URL')
 FYLE_JOBS_CALLBACK_URL = os.environ.get('FYLE_JOBS_CALLBACK_URL')
-
-# Email settings
-SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
-SENDER_EMAIL_ID = os.environ.get('SENDER_EMAIL_ID')
 
 # Testing creds
 TEST_REFRESH_TOKEN = os.environ.get('TEST_REFRESH_TOKEN')

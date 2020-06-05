@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 import requests
 from apps.user.models import UserProfile
 from apps.data_fetcher.utils import FyleSdkConnector
@@ -52,63 +53,6 @@ class BackupFilters():
         raise NotImplementedError
 
 
-class FyleJobsSDK:
-    """
-    Fyle Jobs SDK
-    """
-
-    def __init__(self, fyle_sdk_connection):
-        self.user_profile = fyle_sdk_connection.Employees.get_my_profile()['data']
-        self.access_token = fyle_sdk_connection.access_token
-
-    def trigger_now(self, callback_url, callback_method,
-                    job_description, object_id, payload):
-        """
-        Trigger callback immediately
-        :param payload: callback payload
-        :param callback_url: callback URL for the job
-        :param callback_method: HTTP method for callback
-        :param job_description: Job description
-        :param object_id: object id
-        :returns: response
-        """
-        body = {
-            'template': {
-                'name': 'http.main',
-                'data': {
-                    'url': callback_url,
-                    'method': callback_method,
-                    'payload': payload
-                }
-            },
-            'job_data': {
-                'description': job_description,
-            },
-            'job_meta_data': {
-                'object_id': object_id
-            },
-            'notification': {
-                'enabled': False
-            },
-            'org_user_id': self.user_profile['id']
-        }
-
-        api_headers = {
-            'content-type': 'application/json',
-            'Authorization': 'Bearer {0}'.format(self.access_token)
-        }
-
-        response = requests.post(
-            settings.FYLE_JOBS_URL,
-            headers=api_headers,
-            json=body
-        )
-        if response.status_code == 200:
-            result = json.loads(response.text)
-            return result
-        return None
-
-
 def create_backup(request, data):
     """
     Create a new backup
@@ -144,25 +88,23 @@ def schedule_backup(request, backup):
     try:
         fyle_sdk_connector = FyleSdkConnector(request.user.refresh_token)
         fyle_sdk_connection = fyle_sdk_connector.connection
-        jobs = FyleJobsSDK(fyle_sdk_connection)
+        jobs = fyle_sdk_connection.Jobs
+        org_user_id = fyle_sdk_connection.Employees.get_my_profile()['data']['id']
         object_type = request.POST.get('object_type')
         created_job = jobs.trigger_now(
             callback_url='{0}{1}/'.format(settings.FYLE_JOBS_CALLBACK_URL,
                                           object_type),
             callback_method='POST',
-            object_id=backup.id,
-            payload={'backup_id': backup.id},
+            org_user_id=org_user_id,
             job_description='Fetch backup_id {0} for user: {1}'.format(
                 backup.id, request.user
-            ))
-        if created_job is None:
-            logger.error('Backup_id: %s not scheduled. Task creation failed.', backup.id)
-            backup.current_state = 'FAILED'
-            backup.save()
-            return False
+            ),
+            object_id=backup.id,
+            payload={'backup_id': backup.id}
+        )
         backup.task_id = created_job['id']
         backup.save()
         return True
-    except Exception as excp:
-        logger.error('Exception occured while scheduling backup_id: %s', backup.id)
-        raise
+    except Exception:
+        error = traceback.format_exc()
+        logger.error('Exception occured while scheduling backup_id: %s, Traceback: ', backup.id, error)
