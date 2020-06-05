@@ -13,7 +13,7 @@ django-decorator-include==2.1
 django-tempus-dominus==5.1.2.13
 docutils==0.15.2
 fyle-django-allauth==0.1.2
-fylesdk==0.15.0
+fylesdk==0.17.1
 idna==2.9
 isort==4.3.21
 jmespath==0.9.5
