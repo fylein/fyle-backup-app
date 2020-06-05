@@ -11,7 +11,6 @@ from datetime import datetime
 from django.template.loader import render_to_string
 import boto3
 from botocore.exceptions import ClientError
-from django.core.mail import send_mail
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
 
