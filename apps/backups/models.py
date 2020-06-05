@@ -31,7 +31,7 @@ class Backups(models.Model):
     fyle_file_id = models.CharField(max_length=255, help_text='File ID of file', null=True)
 
     def __str__(self):
-        return self
+        return self.name
 
     class Meta:
         ordering = ["-created_at"]
