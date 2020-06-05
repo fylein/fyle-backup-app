@@ -101,12 +101,7 @@ def schedule_backup(request, backup):
             ),
             object_id=backup.id,
             payload={'backup_id': backup.id}
-            )
-        if created_job is None:
-            logger.error('Backup_id: %s not scheduled. Task creation failed.', backup.id)
-            backup.current_state = 'FAILED'
-            backup.save()
-            return False
+        )
         backup.task_id = created_job['id']
         backup.save()
         return True
