@@ -27,7 +27,8 @@ class FyleSdkConnector():
             base_url=settings.FYLE_BASE_URL,
             client_id=settings.FYLE_CLIENT_ID,
             client_secret=settings.FYLE_CLIENT_SECRET,
-            refresh_token=refresh_token
+            refresh_token=refresh_token,
+            jobs_url=settings.FYLE_JOBS_URL
         )
 
     def extract_expenses(self, state, approved_at, updated_at):
@@ -59,7 +60,7 @@ class FyleSdkConnector():
         employee_data = self.connection.Employees.get_my_profile()
         return employee_data.get('data')
 
-    def upload_file_to_aws(file_path):
+    def upload_file_to_aws(self, file_path):
         """
         Upload file to AWS S3 using FyleSDk
         :param file_path: Location to the file
@@ -192,18 +193,7 @@ def send_email(from_email, to_email, subject, content):
     :param subject: subject for the email
     :param content: email body
     """
-    try:
-        send_mail(
-            subject,
-            content,
-            from_email,
-            [to_email],
-            fail_silently=False,
-        )
-
-    except Exception as e:
-        error = traceback.format_exc()
-        logger.error('Email sending failed due to: %s, Traceback: %s', e, error)
+    return True
 
 
 def notify_user(fyle_connection, download_url, object_type):

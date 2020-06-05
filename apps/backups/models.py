@@ -28,10 +28,10 @@ class Backups(models.Model):
     # we are now storing S3 object name in file_path
     created_at = models.DateTimeField(auto_now_add=True, help_text='Created at datetime')
     modified_at = models.DateTimeField(auto_now=True, help_text='Updated at datetime')
-    fyle_file_id = models.CharField(max_length=255, help_text='File ID of file')
+    fyle_file_id = models.CharField(max_length=255, help_text='File ID of file', null=True)
 
     def __str__(self):
-        return self.name
+        return self
 
     class Meta:
         ordering = ["-created_at"]
