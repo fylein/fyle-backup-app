@@ -26,13 +26,10 @@ export FYLE_JOBS_URL='YOUR FYLE_JOBS_URL'
 export FYLE_JOBS_CALLBACK_URL='YOUR FYLE_JOBS_CALLBACK_URL'
 export DOWNLOAD_PATH='/tmp/'
 
-<<<<<<< HEAD
 # SendGrid Credentials
 export SENDGRID_API_KEY='YOUR WEB_API KEY'
 export SENDGRID_FROM_EMAIL='SENDER_EMAIL'
 
-=======
->>>>>>> 4a423628e6c83bf45e471fc1d5c4e41478ba6693
 # Creds for testing
 export TEST_REFRESH_TOKEN=''
 export TEST_FYLE_ORG_ID=''
