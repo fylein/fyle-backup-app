@@ -194,15 +194,17 @@ def send_email(from_email, to_email, subject, content):
     """
     try:
         message = Mail(
-                        from_email=from_email,
-                        to_emails=to_email,
-                        subject=subject,
-                        html_content=content)
+                    from_email=from_email,
+                    to_emails=to_email,
+                    subject=subject,
+                    html_content=content
+                )
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
         response = sg_client.send(message)
         
-    except Exception as e:
-        logger.error('Email sending failed due to: %s', e)
+    except Exception:
+        error = traceback.format_exc()
+        logger.error('Email sending failed due to: %s', error)
         raise
     return True
 

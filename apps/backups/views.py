@@ -14,7 +14,7 @@ from apps.data_fetcher.utils import notify_user, FyleSdkConnector
 from fyle_backup_app import settings
 
 from .utils import create_backup, schedule_backup
-from .models import Backups, ObjectLookup
+    from .models import Backups, ObjectLookup
 
 logger = logging.getLogger('app')
 
@@ -114,8 +114,7 @@ class BackupsNotifyView(View):
             fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
             object_type = ObjectLookup(backup.object_type).label.lower()
             response = fyle_connection.connection.Files.create_download_url(backup.fyle_file_id)
-            notify_user(fyle_connection, response['url'],
-                        object_type)
+            notify_user(fyle_connection, response['url'], object_type)
             messages.success(request, 'We have sent you the download\
                              link by email.')
             return redirect('/main/{0}/'.format(object_type))
