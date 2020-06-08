@@ -206,9 +206,6 @@ def send_email(from_email, to_email, subject, content):
         raise
     return True
 
-
-
-
 def notify_user(fyle_connection, download_url, object_type):
     """
     Get a presigned URL and mail it to user
