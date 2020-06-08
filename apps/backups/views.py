@@ -14,7 +14,7 @@ from apps.data_fetcher.utils import notify_user, FyleSdkConnector
 from fyle_backup_app import settings
 
 from .utils import create_backup, schedule_backup
-    from .models import Backups, ObjectLookup
+from .models import Backups, ObjectLookup
 
 logger = logging.getLogger('app')
 
