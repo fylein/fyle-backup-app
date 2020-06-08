@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
@@ -112,7 +113,8 @@ class BackupsNotifyView(View):
             backup = Backups.objects.get(id=backup_id, user_id__email=request.user)
             fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
             object_type = ObjectLookup(backup.object_type).label.lower()
-            notify_user(fyle_connection, backup.file_path, backup.fyle_org_id,
+            response = fyle_connection.connection.Files.create_download_url(backup.fyle_file_id)
+            notify_user(fyle_connection, response['url'],
                         object_type)
             messages.success(request, 'We have sent you the download\
                              link by email.')
@@ -120,8 +122,9 @@ class BackupsNotifyView(View):
         except Backups.DoesNotExist:
             messages.error(request, 'Did not find a backup for this id.')
         except Exception as excp:
-            logger.error('Error while notifying user for backup_id: %s. Error: %s',
-                         backup_id, excp)
+            error = traceback.format_exc()
+            logger.error('Error while notifying user for backup_id: %s. Error: %s, Traceback: %s',
+                         backup_id, excp, error)
             messages.error(request, 'Something went wrong. Please try again!')
         return redirect('/main/expenses/')
 

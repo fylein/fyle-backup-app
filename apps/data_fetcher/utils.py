@@ -6,6 +6,8 @@ import json
 import logging
 import traceback
 import requests
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from datetime import datetime
 from django.template.loader import render_to_string
 import boto3
@@ -190,7 +192,21 @@ def send_email(from_email, to_email, subject, content):
     :param subject: subject for the email
     :param content: email body
     """
+    try:
+        message = Mail(
+                        from_email=from_email,
+                        to_emails=to_email,
+                        subject=subject,
+                        html_content=content)
+        sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        response = sg_client.send(message)
+        
+    except Exception as e:
+        logger.error('Email sending failed due to: %s', e)
+        raise
     return True
+
+
 
 
 def notify_user(fyle_connection, download_url, object_type):
