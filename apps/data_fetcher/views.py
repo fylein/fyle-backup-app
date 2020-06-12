@@ -18,18 +18,21 @@ class ExpensesFetchView(View):
     """
     Prepare backup data, upload to cloud, notify user
     """
+
     def post(self, request):
-        logger.info('Got callback hit from Jobs Infra with params: %s', request.body)
+        logger.info(
+            'Got callback hit from Jobs Infra with params: %s', request.body)
         backup_id = json.loads(request.body).get('backup_id')
         try:
             backup = Backups.objects.get(id=backup_id)
         except Backups.DoesNotExist:
-            logger.error('Invalid backup_id sent by JobsInfra. Request: %s', request.POST)
-            return JsonResponse({'status':'error', 'message':'Invalid backup_id.'}, status=400)
+            logger.error(
+                'Invalid backup_id sent by JobsInfra. Request: %s', request.POST)
+            return JsonResponse({'status': 'error', 'message': 'Invalid backup_id.'}, status=400)
 
         is_sucess = fetch_and_notify_expenses(backup)
         if is_sucess:
-            return JsonResponse({'status':'success', 'message':'Backup processed.'}, status=200)
+            return JsonResponse({'status': 'success', 'message': 'Backup processed.'}, status=200)
 
-        return JsonResponse({'status':'error', 'message':'Backup failed.'},
+        return JsonResponse({'status': 'error', 'message': 'Backup failed.'},
                             status=500)

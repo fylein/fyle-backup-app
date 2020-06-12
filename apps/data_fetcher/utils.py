@@ -5,13 +5,10 @@ import shutil
 import json
 import logging
 import traceback
-import requests
+from datetime import datetime
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from datetime import datetime
 from django.template.loader import render_to_string
-import boto3
-from botocore.exceptions import ClientError
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
 
@@ -22,6 +19,7 @@ class FyleSdkConnector():
     """
     Class with utils functions for FyleSDK
     """
+
     def __init__(self, refresh_token):
         self.connection = FyleSDK(
             base_url=settings.FYLE_BASE_URL,
@@ -72,8 +70,10 @@ class FyleSdkConnector():
         file_data = open(file_path, 'rb').read()
 
         file_obj = fyle_connection.Files.post(file_path)
-        upload_url = fyle_connection.Files.create_upload_url(file_obj['id'])['url']
-        fyle_connection.Files.upload_file_to_aws(content_type, file_data, upload_url)
+        upload_url = fyle_connection.Files.create_upload_url(file_obj['id'])[
+            'url']
+        fyle_connection.Files.upload_file_to_aws(
+            content_type, file_data, upload_url)
         response = fyle_connection.Files.create_download_url(file_obj['id'])
 
         val = {}
@@ -87,6 +87,7 @@ class Dumper():
     """
     Used to Dump the expenses data into a CSV or JSON file
     """
+
     def __init__(self, fyle_connection, **kwargs):
         """
         :param fyle_connection: connection to fyle through FyleSDK
@@ -114,7 +115,8 @@ class Dumper():
         try:
             with open(filename, 'w') as export_file:
                 keys = data[0].keys()
-                dict_writer = csv.DictWriter(export_file, fieldnames=keys, delimiter=',')
+                dict_writer = csv.DictWriter(
+                    export_file, fieldnames=keys, delimiter=',')
                 dict_writer.writeheader()
                 dict_writer.writerows(data)
         except (OSError, csv.Error) as e:
@@ -128,32 +130,37 @@ class Dumper():
         :return:  Expenses Attachments
         """
         fyle_connection = self.connection
-        expense_ids = [(i.get('id')) for i in self.data if i['has_attachments'] is True]
+        expense_ids = [(i.get('id'))
+                       for i in self.data if i['has_attachments'] is True]
         if not expense_ids:
             logger.error('No attachments found for: %s', dir_name)
             return
-        logger.info('%s Expense(s) have attachment(s) . Downloading now.', len(expense_ids))
+        logger.info(
+            '%s Expense(s) have attachment(s) . Downloading now.', len(expense_ids))
 
         for expense_id in expense_ids:
             try:
                 attachment = fyle_connection.extract_attachments(expense_id)
                 attachment_data = attachment['data']
-                attachment_content = [item.get('content') for item in attachment_data]
+                attachment_content = [item.get('content')
+                                      for item in attachment_data]
 
                 if attachment['data']:
                     attachment = attachment['data'][0]
                     attachment['expense_id'] = expense_id
-                    attachment_names = [item.get('filename') for item in attachment_data]
+                    attachment_names = [item.get('filename')
+                                        for item in attachment_data]
 
                     for index, img_data in enumerate(attachment_content):
                         img_data = (attachment_content[index])
                         with open(dir_name + '/' + expense_id + '_' +
-                                    attachment_names[index], "wb") as fh:
+                                  attachment_names[index], "wb") as fh:
                             fh.write(base64.b64decode(img_data))
                             # logger.info('%s_%s Download completed', expense_id,
                             #              attachment_names[index])
             except Exception as e:
-                logger.error('Attachment dump failed for %s, Error: %s', attachment_names[index], e)
+                logger.error('Attachment dump failed for %s, Error: %s',
+                             attachment_names[index], e)
 
     def dump_data(self):
         """
@@ -161,19 +168,23 @@ class Dumper():
         """
         try:
             now = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-            dir_name = self.path + '{}-{}-Date--{}'.format(self.fyle_org_id, self.name, now)
+            dir_name = self.path + \
+                '{}-{}-Date--{}'.format(self.fyle_org_id, self.name, now)
             os.mkdir(dir_name)
             self.dump_csv(dir_name)
             if self.download_attachments is True:
-                logger.info('Going to download attachment for backup: %s', self.name)
+                logger.info(
+                    'Going to download attachment for backup: %s', self.name)
                 self.dump_attachments(dir_name)
             logger.info('Attachment dump finished for %s', self.name)
             shutil.make_archive(dir_name, 'zip', dir_name)
-            logger.info('Archive file created at %s for %s', dir_name, self.name)
+            logger.info('Archive file created at %s for %s',
+                        dir_name, self.name)
             return dir_name+'.zip'
         except Exception as e:
             logger.error('Error in dump_data() : %s', e)
             raise
+
 
 def remove_items_from_tmp(dir_path):
     try:
@@ -193,20 +204,18 @@ def send_email(from_email, to_email, subject, content):
     :param content: email body
     """
     try:
-        message = Mail(
-                    from_email=from_email,
-                    to_emails=to_email,
-                    subject=subject,
-                    html_content=content
-                )
+        message = Mail(from_email=from_email,
+                       to_emails=to_email,
+                       subject=subject,
+                       html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg_client.send(message)
-        
+        sg_client.send(message)
     except Exception:
         error = traceback.format_exc()
         logger.error('Email sending failed due to: %s', error)
         raise
     return True
+
 
 def notify_user(fyle_connection, download_url, object_type):
     """
@@ -220,7 +229,7 @@ def notify_user(fyle_connection, download_url, object_type):
         email_to = user_data.get('employee_email')
         subject = 'The {0} backup you requested from Fyle\
                    is ready for download'.format(object_type.capitalize())
-        content = render_to_string('email_body.html', {'link':download_url})
+        content = render_to_string('email_body.html', {'link': download_url})
         send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
         print('Signed Download URL: ', download_url)
 
@@ -245,7 +254,8 @@ def fetch_and_notify_expenses(backup):
     fyle_connection = FyleSdkConnector(refresh_token)
     logger.info('Going to fetch data for backup_id: %s', backup_id)
     response_data = fyle_connection.extract_expenses(state=filters.get('state'),
-                                                     approved_at=filters.get('approved_at'),
+                                                     approved_at=filters.get(
+                                                         'approved_at'),
                                                      updated_at=filters.get('updated_at'))
     if not response_data:
         logger.info('No data found for backup_id: %s', backup_id)
@@ -277,5 +287,6 @@ def fetch_and_notify_expenses(backup):
         backup.current_state = 'FAILED'
         backup.save()
         error = traceback.format_exc()
-        logger.error('Backup process failed for bkp_id: %s . Error: %s , Traceback: %s', backup_id, e, error)
+        logger.error(
+            'Backup process failed for bkp_id: %s . Error: %s , Traceback: %s', backup_id, e, error)
         return False

@@ -8,6 +8,7 @@ class FyleOAuth2():
     """
     Utility class for Fyle Auth
     """
+
     def __init__(self):
         """
         initialize from settings
@@ -25,8 +26,8 @@ class FyleOAuth2():
         :return:
         """
         authorize_url = self.authorize_uri + '?response_type=code&client_id=' \
-                                    + self.client_id + '&redirect_uri=' + self.redirect_uri \
-                                    + '&scope=read' + '&state=' + state
+            + self.client_id + '&redirect_uri=' + self.redirect_uri \
+            + '&scope=read' + '&state=' + state
         return authorize_url
 
     def get_refresh_token(self, authorization_code):
