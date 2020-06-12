@@ -41,7 +41,8 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     Custom user model
     """
 
-    email = models.EmailField(max_length=255, unique=True, help_text="Email id of the user")
+    email = models.EmailField(
+        max_length=255, unique=True, help_text="Email id of the user")
     name = models.CharField(max_length=255, help_text="Name of the user")
     is_active = models.BooleanField(default=True, help_text="Active user")
     is_superuser = models.BooleanField(default=False, help_text="Super user")

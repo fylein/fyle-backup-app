@@ -1,5 +1,6 @@
 from apps.data_fetcher.utils import FyleSdkConnector
 
+
 def user_data(request):
     """
     Context processor for Navbar

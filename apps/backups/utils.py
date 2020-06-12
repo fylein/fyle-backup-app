@@ -8,10 +8,12 @@ from fyle_backup_app import settings
 from .models import Backups, ObjectLookup
 logger = logging.getLogger('app')
 
+
 class BackupFilters():
     """
     Fetch filter values based on business object
     """
+
     def __init__(self, request, object_type):
         self.request = request
         self.object_type = object_type
@@ -26,21 +28,25 @@ class BackupFilters():
         approved_at_gte = request.get('approved_at_gte')
         approved_at_lte = request.get('approved_at_lte')
         if approved_at_gte:
-            approved_at.append("gte:{0}{1}".format(approved_at_gte, 'T00:00:00.000Z'))
+            approved_at.append("gte:{0}{1}".format(
+                approved_at_gte, 'T00:00:00.000Z'))
         if approved_at_lte:
-            approved_at.append("lte:{0}{1}".format(approved_at_lte, 'T23:59:59.000Z'))
+            approved_at.append("lte:{0}{1}".format(
+                approved_at_lte, 'T23:59:59.000Z'))
 
         updated_at = []
         updated_at_gte = request.get('updated_at_gte')
         updated_at_lte = request.get('updated_at_lte')
         if updated_at_gte:
-            updated_at.append("gte:{0}{1}".format(updated_at_gte, 'T00:00:00.000Z'))
+            updated_at.append("gte:{0}{1}".format(
+                updated_at_gte, 'T00:00:00.000Z'))
         if updated_at_lte:
-            updated_at.append("lte:{0}{1}".format(updated_at_lte, 'T23:59:59.000Z'))
+            updated_at.append("lte:{0}{1}".format(
+                updated_at_lte, 'T23:59:59.000Z'))
         download_attachments = request.get('download_attachments')
         filter_value_dict = json.dumps({"state": state, "approved_at": approved_at,
                                         "updated_at": updated_at,
-                                        "download_attachments":download_attachments})
+                                        "download_attachments": download_attachments})
         return filter_value_dict
 
     def get_filters_for_object(self):
@@ -75,6 +81,7 @@ def create_backup(request, data):
                                     )
     return backup
 
+
 def schedule_backup(request, backup):
     """
     Schedule this backup using JobsInfra
@@ -85,7 +92,8 @@ def schedule_backup(request, backup):
         fyle_sdk_connector = FyleSdkConnector(request.user.refresh_token)
         fyle_sdk_connection = fyle_sdk_connector.connection
         jobs = fyle_sdk_connection.Jobs
-        org_user_id = fyle_sdk_connection.Employees.get_my_profile()['data']['id']
+        org_user_id = fyle_sdk_connection.Employees.get_my_profile()[
+            'data']['id']
         object_type = request.POST.get('object_type')
         created_job = jobs.trigger_now(
             callback_url='{0}{1}/'.format(settings.FYLE_JOBS_CALLBACK_URL,
@@ -103,4 +111,5 @@ def schedule_backup(request, backup):
         return True
     except Exception:
         error = traceback.format_exc()
-        logger.error('Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)
+        logger.error(
+            'Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)
