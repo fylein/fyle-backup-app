@@ -1,7 +1,6 @@
 import json
 import logging
 import traceback
-import requests
 from apps.user.models import UserProfile
 from apps.data_fetcher.utils import FyleSdkConnector
 from fyle_backup_app import settings
@@ -64,10 +63,7 @@ def create_backup(request, data):
     object_type = data.get('object_type')
     current_state = 'ONGOING'
     name = data.get('name')
-    try:
-        bkp_filter_obj = BackupFilters(data, object_type)
-    except NotImplementedError:
-        raise
+    bkp_filter_obj = BackupFilters(data, object_type)
     filters = bkp_filter_obj.get_filters_for_object()
     data_format = data.get('data_format')
     user = UserProfile.objects.get(email=request.user)
@@ -107,4 +103,4 @@ def schedule_backup(request, backup):
         return True
     except Exception:
         error = traceback.format_exc()
-        logger.error('Exception occured while scheduling backup_id: %s, Traceback: ', backup.id, error)
+        logger.error('Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)

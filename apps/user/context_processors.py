@@ -11,6 +11,6 @@ def user_data(request):
             fyle_sdk_connector = FyleSdkConnector(request.user.refresh_token)
             user_details = fyle_sdk_connector.extract_employee_details()
             return {'username': user_details.get('full_name'), 'org': user_details.get('org_name')}
-        except Exception as e:
+        except Exception:
             return {}
     return {}

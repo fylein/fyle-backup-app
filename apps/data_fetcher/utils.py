@@ -5,13 +5,10 @@ import shutil
 import json
 import logging
 import traceback
-import requests
+from datetime import datetime
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from datetime import datetime
 from django.template.loader import render_to_string
-import boto3
-from botocore.exceptions import ClientError
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
 
@@ -148,7 +145,7 @@ class Dumper():
                     for index, img_data in enumerate(attachment_content):
                         img_data = (attachment_content[index])
                         with open(dir_name + '/' + expense_id + '_' +
-                                    attachment_names[index], "wb") as fh:
+                                  attachment_names[index], "wb") as fh:
                             fh.write(base64.b64decode(img_data))
                             # logger.info('%s_%s Download completed', expense_id,
                             #              attachment_names[index])
@@ -193,15 +190,12 @@ def send_email(from_email, to_email, subject, content):
     :param content: email body
     """
     try:
-        message = Mail(
-                    from_email=from_email,
-                    to_emails=to_email,
-                    subject=subject,
-                    html_content=content
-                )
+        message = Mail(from_email=from_email,
+                       to_emails=to_email,
+                       subject=subject,
+                       html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg_client.send(message)
-        
+        sg_client.send(message)
     except Exception:
         error = traceback.format_exc()
         logger.error('Email sending failed due to: %s', error)
