@@ -111,4 +111,5 @@ def schedule_backup(request, backup):
         return True
     except Exception:
         error = traceback.format_exc()
-        logger.error('Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)
+        logger.error(
+            'Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)
