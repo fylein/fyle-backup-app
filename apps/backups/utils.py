@@ -67,7 +67,7 @@ def create_backup(request, data):
     refresh_token = request.user.refresh_token
     fyle_org_id = request.user.fyle_org_id
     object_type = data.get('object_type')
-    current_state = 'ONGOING'
+    current_state = 'IN PROGRESS'
     name = data.get('name')
     bkp_filter_obj = BackupFilters(data, object_type)
     filters = bkp_filter_obj.get_filters_for_object()
