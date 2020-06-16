@@ -29,7 +29,7 @@
                     <select class="selectpicker" multiple data-live-search="true"
                         name="state" id="id_state">
                                 {% for choice, value in form.state.field.choices %}
-                                    <option value={{choice}}>{{ value }}</option>
+                                    <option value={{choice}} selected="true">{{ value }}</option>
                                 {% endfor %}
                     </select>
                 </div>
@@ -53,7 +53,7 @@
                 </div>
             </div>
             <div class="filter-row">
-                <label class="filter-lbl">Download Attachments</label>
+                <label class="filter-lbl">Include Attachments</label>
                 {{form.download_attachments}}
             </div>
             {{form.object_type}}
@@ -80,7 +80,7 @@
                             <td>{{expense.current_state}}</td>
                             <td>
                                 {% if expense.current_state == 'READY' %}
-                                    <a href="{% url 'backups-notify' expense.id %}"><i class="fa fa-envelope"></i></a>
+                                    <a href="{% url 'backups-notify' expense.id %}" title="Resend Backup Email"><i class="fa fa-envelope"></i></a>
                                 {% endif %}
                             </td>
                         </tr>
