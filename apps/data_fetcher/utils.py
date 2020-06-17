@@ -26,7 +26,7 @@ EXPENSE_STATES = {
     "APPROVED": "Approved",
     "APPROVER_PENDING": "Approver pending",
     "DRAFT": "Draft",
-    "FYLED": "Filed",
+    "FYLED": "Fyled",
     "PAID": "Paid"
 }
 
@@ -130,7 +130,7 @@ class Dumper():
         MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
             "July", "Aug", "Sept", "Oct", "Nov", "Dec"
         ]
-        if value!='None':
+        if value:
             date, month, year = value.split("T")[0].split("-")[::-1]
             return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
 
