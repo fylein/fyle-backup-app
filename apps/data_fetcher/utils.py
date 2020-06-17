@@ -130,11 +130,9 @@ class Dumper():
         MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
             "July", "Aug", "Sept", "Oct", "Nov", "Dec"
         ]
-        value = str(value)
-        if value:
+        if value!='None':
             date, month, year = value.split("T")[0].split("-")[::-1]
             return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
-        return value
 
     def dump_csv(self, dir_name):
         """
