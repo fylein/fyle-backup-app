@@ -105,36 +105,69 @@ class Dumper():
         self.name = kwargs.get('name')
         self.download_attachments = kwargs.get('download_attachments')
 
+    @staticmethod
+    def format_date(value, currency=False):
+        """
+        :param date in date
+        """
+        MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
+            "July", "Aug", "Sept", "Oct", "Nov", "Dec"
+        ]
+        value = str(value)
+        if value:
+            date, month, year = value.split("T")[0].split("-")[::-1]
+            if not currency:
+                return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
+            else:
+                return "{}-{}-{}".format(year, month, date)
+        return value
+
     def dump_csv(self, dir_name):
         """
         :param data: Takes existing Expenses Data, that match the parameters
         :param path: Takes the path of the file
         :return: CSV file with the list of existing Expenses
         """
+        FUND_SOURCES = {
+            "PERSONAL": "Personal Account",
+            "ADVANCE": "Advance",
+            "CCC": "Corporate Credit Card"
+        }
+        STATES = {
+            "PAYMENT_PROCESSING": "Payment Processing",
+            "COMPLETE": "Complete",
+            "PAYMENT_PENDING": "Payment Pending",
+            "APPROVED": "Approved",
+            "APPROVER_PENDING": "Approver pending",
+            "DRAFT": "Draft",
+            "FYLED": "Filed",
+            "PAID": "Paid"
+        }
         expenses = self.data
         data = []
         for expense in expenses: 
             row = {
                 'Expense ID': expense['id'],
-                'Entity Name': expense['org_name'],
+                'Orgnization Name': expense['org_name'],
                 'Employee Email': expense['employee_email'],
                 'Employee Id': expense['employee_id'],
                 'Cost Center': expense['cost_center_name'],
                 'Reimbursable': expense['reimbursable'],
-                'State': expense['state'],
+                'State': STATES[expense['state']],
                 'Report Number': expense['report_id'],
                 'Currency': expense['currency'],
                 'Amount': expense['amount'],
-                'Amount in USD': expense['foreign_amount'],
+                'Foreign Currency': expense['foreign_currency'],
+                'Amount in Foreign Currency': expense['foreign_amount'],
                 'Purpose': expense['purpose'],
                 'Expense Number': expense['expense_number'],
-                'Fund Source': expense['fund_source'],
+                'Fund Source': FUND_SOURCES[expense['fund_source']],
                 'Category Name': expense['category_name'],
                 'Sub Category': expense['sub_category'],
                 'Project Name': expense['project_name'],
-                'Spent On': expense['spent_at'],
-                'Created On': expense['created_at'],
-                'Approved On': expense['approved_at']
+                'Spent On': self.format_date(expense['spent_at']),
+                'Created On': self.format_date(expense['created_at']),
+                'Approved On': self.format_date(expense['approved_at'])
             }
             data.append(row)
         filename = dir_name + '/{0}.csv'.format(self.name)
