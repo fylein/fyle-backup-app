@@ -105,13 +105,42 @@ class Dumper():
         self.name = kwargs.get('name')
         self.download_attachments = kwargs.get('download_attachments')
 
+    def get_headers():
+        
+        return header
+
     def dump_csv(self, dir_name):
         """
         :param data: Takes existing Expenses Data, that match the parameters
         :param path: Takes the path of the file
         :return: CSV file with the list of existing Expenses
         """
-        data = self.data
+        expenses = self.data
+        data = []
+        for expense in expenses: 
+            row = {
+                'Expense ID': expense['id'],
+                'Entity Name': expense['org_name'],
+                'Employee Email': expense['employee_email'],
+                'Employee Id': expense['employee_id'],
+                'Cost Center': expense['cost_center_name'],
+                'Reimbursable': expense['reimbursable'],
+                'State': expense['state'],
+                'Report Number': expense['report_id'],
+                'Currency': expense['currency'],
+                'Amount': expense['amount'],
+                'Amount in USD': expense['foreign_amount'],
+                'Purpose': expense['purpose'],
+                'Expense Number': expense['expense_number'],
+                'Fund Source': expense['fund_source'],
+                'Category Name': expense['category_name'],
+                'Sub Category': expense['sub_category'],
+                'Project Name': expense['project_name'],
+                'Spent On': expense['spent_at'],
+                'Created On': expense['created_at'],
+                'Approved On': expense['approved_at']
+            }
+            data.append(row)
         filename = dir_name + '/{0}.csv'.format(self.name)
         try:
             with open(filename, 'w') as export_file:
