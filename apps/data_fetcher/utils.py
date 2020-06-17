@@ -105,10 +105,6 @@ class Dumper():
         self.name = kwargs.get('name')
         self.download_attachments = kwargs.get('download_attachments')
 
-    def get_headers():
-        
-        return header
-
     def dump_csv(self, dir_name):
         """
         :param data: Takes existing Expenses Data, that match the parameters
