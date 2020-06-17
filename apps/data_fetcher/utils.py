@@ -210,11 +210,10 @@ def send_email(from_email, to_email, subject, content):
                        html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
         sg_client.send(message)
-    except Exception:
+    except Exception as e:
         error = traceback.format_exc()
         logger.error('Email sending failed due to: %s', error)
-        raise
-    return True
+        logger.error(e.body)
 
 
 def notify_user(fyle_connection, download_url, object_type):
