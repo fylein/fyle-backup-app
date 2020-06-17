@@ -29,7 +29,7 @@
                     <select class="selectpicker" multiple data-live-search="true"
                         name="state" id="id_state">
                                 {% for choice, value in form.state.field.choices %}
-                                    <option value={{choice}}>{{ value }}</option>
+                                    <option value={{choice}} selected="true">{{ value }}</option>
                                 {% endfor %}
                     </select>
                 </div>

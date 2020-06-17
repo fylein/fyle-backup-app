@@ -243,11 +243,10 @@ def send_email(from_email, to_email, subject, content):
         tracking_settings.subscription_tracking = SubscriptionTracking(enable=False)
         message.tracking_settings = tracking_settings
         sg_client.send(message)
-    except Exception:
+    except Exception as e:
         error = traceback.format_exc()
         logger.error('Email sending failed due to: %s', error)
-        raise
-    return True
+        logger.error(e.body)
 
 
 def notify_user(fyle_connection, download_url, object_type):
