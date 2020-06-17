@@ -115,28 +115,7 @@ class Dumper():
         filename = dir_name + '/{0}.csv'.format(self.name)
         try:
             with open(filename, 'w') as export_file:
-                #keys = data[0].keys()
-                keys = [
-                    'Entity Name',
-                    'Employee Email',
-                    'Employee Id',
-                    'Cost Center',
-                    'Reimbursable',
-                    'State',
-                    'Report Number',
-                    'Currency',
-                    'Amount',
-                    'Amount in USD',
-                    'Purpose',
-                    'Expense Number',
-                    'Fund Source',
-                    'Category Name',
-                    'Sub Category',
-                    'Project Name',
-                    'Spent On',
-                    'Created On',
-                    'Approved On'
-                ]
+                keys = data[0].keys()
                 dict_writer = csv.DictWriter(
                     export_file, fieldnames=keys, delimiter=',')
                 dict_writer.writeheader()
