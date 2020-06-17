@@ -14,6 +14,22 @@ from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
 
+EXPENSE_FUND_SOURCES = {
+    "PERSONAL": "Personal Account",
+    "ADVANCE": "Advance",
+    "CCC": "Corporate Credit Card"
+}
+EXPENSE_STATES = {
+    "PAYMENT_PROCESSING": "Payment Processing",
+    "COMPLETE": "Complete",
+    "PAYMENT_PENDING": "Payment Pending",
+    "APPROVED": "Approved",
+    "APPROVER_PENDING": "Approver pending",
+    "DRAFT": "Draft",
+    "FYLED": "Filed",
+    "PAID": "Paid"
+}
+
 
 class FyleSdkConnector():
     """
@@ -106,9 +122,10 @@ class Dumper():
         self.download_attachments = kwargs.get('download_attachments')
 
     @staticmethod
-    def format_date(value, currency=False):
+    def format_date(value):
         """
-        :param date in date
+        :param date of the transaction
+        :return formatted date
         """
         MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
             "July", "Aug", "Sept", "Oct", "Nov", "Dec"
@@ -116,10 +133,7 @@ class Dumper():
         value = str(value)
         if value:
             date, month, year = value.split("T")[0].split("-")[::-1]
-            if not currency:
-                return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
-            else:
-                return "{}-{}-{}".format(year, month, date)
+            return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
         return value
 
     def dump_csv(self, dir_name):
@@ -128,21 +142,6 @@ class Dumper():
         :param path: Takes the path of the file
         :return: CSV file with the list of existing Expenses
         """
-        FUND_SOURCES = {
-            "PERSONAL": "Personal Account",
-            "ADVANCE": "Advance",
-            "CCC": "Corporate Credit Card"
-        }
-        STATES = {
-            "PAYMENT_PROCESSING": "Payment Processing",
-            "COMPLETE": "Complete",
-            "PAYMENT_PENDING": "Payment Pending",
-            "APPROVED": "Approved",
-            "APPROVER_PENDING": "Approver pending",
-            "DRAFT": "Draft",
-            "FYLED": "Filed",
-            "PAID": "Paid"
-        }
         expenses = self.data
         data = []
         for expense in expenses: 
@@ -153,7 +152,7 @@ class Dumper():
                 'Employee Id': expense['employee_id'],
                 'Cost Center': expense['cost_center_name'],
                 'Reimbursable': expense['reimbursable'],
-                'State': STATES[expense['state']],
+                'State': EXPENSE_STATES[expense['state']],
                 'Report Number': expense['report_id'],
                 'Currency': expense['currency'],
                 'Amount': expense['amount'],
@@ -161,7 +160,7 @@ class Dumper():
                 'Amount in Foreign Currency': expense['foreign_amount'],
                 'Purpose': expense['purpose'],
                 'Expense Number': expense['expense_number'],
-                'Fund Source': FUND_SOURCES[expense['fund_source']],
+                'Fund Source': EXPENSE_FUND_SOURCES[expense['fund_source']],
                 'Category Name': expense['category_name'],
                 'Sub Category': expense['sub_category'],
                 'Project Name': expense['project_name'],
