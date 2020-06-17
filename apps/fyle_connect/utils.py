@@ -28,8 +28,6 @@ class FyleOAuth2():
         authorize_url = self.authorize_uri + '?response_type=code&client_id=' \
             + self.client_id + '&redirect_uri=' + self.redirect_uri \
             + '&scope=read' + '&state=' + state
-        print(settings.FYLE_CALLBACK_URI)
-        
         return authorize_url
 
     def get_refresh_token(self, authorization_code):
