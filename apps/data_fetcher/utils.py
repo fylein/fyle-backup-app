@@ -40,6 +40,7 @@ class FyleSdkConnector():
         """
         expenses = self.connection.Expenses.get_all(state=state, approved_at=approved_at,
                                                     updated_at=updated_at)
+        
         return expenses
 
     def extract_attachments(self, expense_id):
