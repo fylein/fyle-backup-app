@@ -7,7 +7,7 @@ import logging
 import traceback
 from datetime import datetime
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, SubscriptionTracking, TrackingSettings
 from django.template.loader import render_to_string
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
@@ -239,6 +239,9 @@ def send_email(from_email, to_email, subject, content):
                        subject=subject,
                        html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        tracking_settings = TrackingSettings()
+        tracking_settings.subscription_tracking = SubscriptionTracking(enable=False)
+        message.tracking_settings = tracking_settings
         sg_client.send(message)
     except Exception:
         error = traceback.format_exc()
