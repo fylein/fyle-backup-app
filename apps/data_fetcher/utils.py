@@ -7,12 +7,28 @@ import logging
 import traceback
 from datetime import datetime
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, SubscriptionTracking, TrackingSettings
 from django.template.loader import render_to_string
 from fylesdk import FyleSDK
 from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
+
+EXPENSE_FUND_SOURCES = {
+    "PERSONAL": "Personal Account",
+    "ADVANCE": "Advance",
+    "CCC": "Corporate Credit Card"
+}
+EXPENSE_STATES = {
+    "PAYMENT_PROCESSING": "Payment Processing",
+    "COMPLETE": "Complete",
+    "PAYMENT_PENDING": "Payment Pending",
+    "APPROVED": "Approved",
+    "APPROVER_PENDING": "Approver pending",
+    "DRAFT": "Draft",
+    "FYLED": "Fyled",
+    "PAID": "Paid"
+}
 
 
 class FyleSdkConnector():
@@ -105,13 +121,52 @@ class Dumper():
         self.name = kwargs.get('name')
         self.download_attachments = kwargs.get('download_attachments')
 
+    @staticmethod
+    def format_date(value):
+        """
+        :param date of the transaction
+        :return formatted date
+        """
+        MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
+            "July", "Aug", "Sept", "Oct", "Nov", "Dec"
+        ]
+        if value:
+            date, month, year = value.split("T")[0].split("-")[::-1]
+            return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
+
     def dump_csv(self, dir_name):
         """
         :param data: Takes existing Expenses Data, that match the parameters
         :param path: Takes the path of the file
         :return: CSV file with the list of existing Expenses
         """
-        data = self.data
+        expenses = self.data
+        data = []
+        for expense in expenses: 
+            row = {
+                'Expense ID': expense['id'],
+                'Orgnization Name': expense['org_name'],
+                'Employee Email': expense['employee_email'],
+                'Employee Id': expense['employee_id'],
+                'Cost Center': expense['cost_center_name'],
+                'Reimbursable': expense['reimbursable'],
+                'State': EXPENSE_STATES[expense['state']],
+                'Report Number': expense['report_id'],
+                'Currency': expense['currency'],
+                'Amount': expense['amount'],
+                'Foreign Currency': expense['foreign_currency'],
+                'Amount in Foreign Currency': expense['foreign_amount'],
+                'Purpose': expense['purpose'],
+                'Expense Number': expense['expense_number'],
+                'Fund Source': EXPENSE_FUND_SOURCES[expense['fund_source']],
+                'Category Name': expense['category_name'],
+                'Sub Category': expense['sub_category'],
+                'Project Name': expense['project_name'],
+                'Spent On': self.format_date(expense['spent_at']),
+                'Created On': self.format_date(expense['created_at']),
+                'Approved On': self.format_date(expense['approved_at'])
+            }
+            data.append(row)
         filename = dir_name + '/{0}.csv'.format(self.name)
         try:
             with open(filename, 'w') as export_file:
@@ -210,6 +265,9 @@ def send_email(from_email, to_email, subject, content):
                        subject=subject,
                        html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        tracking_settings = TrackingSettings()
+        tracking_settings.subscription_tracking = SubscriptionTracking(enable=False)
+        message.tracking_settings = tracking_settings
         sg_client.send(message)
     except Exception as e:
         error = traceback.format_exc()
