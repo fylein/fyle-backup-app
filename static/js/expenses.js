@@ -63,9 +63,3 @@ $('#id_state').on('changed.bs.select', function (e, clickedIndex, newValue, oldV
     }
 });
 
-$('#id_state option').prop('selected', true);
-$(document).ready (function(){
-    window.setInterval(function () { 
-        $(".alert").alert('close'); 
-    }, 2000); 
-});
