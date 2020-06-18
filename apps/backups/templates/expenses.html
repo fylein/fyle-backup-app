@@ -26,10 +26,10 @@
             <div class="filter-row">
                 <label class="filter-lbl">State</label>
                 <div class="filter-input">
-                    <select class="selectpicker" multiple data-live-search="true"
+                    <select class="selectpicker" title="All" multiple data-live-search="true"
                         name="state" id="id_state">
                                 {% for choice, value in form.state.field.choices %}
-                                    <option value={{choice}} selected="true">{{ value }}</option>
+                                    <option value={{choice}}>{{ value }}</option>
                                 {% endfor %}
                     </select>
                 </div>

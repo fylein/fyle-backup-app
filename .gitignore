@@ -116,6 +116,9 @@ venv.bak/
 # Setup File
 setup.sh
 
+# Run File
+run.sh
+
 # Spyder project settings
 .spyderproject
 .spyproject
