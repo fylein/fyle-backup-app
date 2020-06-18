@@ -12,6 +12,10 @@ $("#close-filters-btn").click(function () {
     $('#id_approved_at_lte').val(null);
     $('#id_updated_at_gte').val(null);
     $('#id_updated_at_lte').val(null);
+    $('#id_reimbursed_at_gte').val(null);
+    $('#id_reimbursed_at_lte').val(null);
+    $('#id_spent_at_gte').val(null);
+    $('#id_spent_at_lte').val(null);
 });
 
 $(function () {
@@ -38,6 +42,30 @@ $(function () {
     $("#id_updated_at_lte").on("change.datetimepicker", function (e) {
         $('#id_updated_at_gte').datetimepicker('maxDate', e.date);
     });
+
+    //Linked dates for reimbursed at filter
+    $('#id_reimbursed_at_gte').datetimepicker();
+    $('#id_reimbursed_at_lte').datetimepicker({
+        useCurrent: false
+    });
+    $("#id_reimbursed_at_gte").on("change.datetimepicker", function (e) {
+        $('#id_reimbursed_at_lte').datetimepicker('minDate', e.date);
+    });
+    $("#id_reimbursed_at_lte").on("change.datetimepicker", function (e) {
+        $('#id_reimbursed_at_gte').datetimepicker('maxDate', e.date);
+    });
+
+    //Linked dates for spent at filter
+    $('#id_spent_at_gte').datetimepicker();
+    $('#id_spent_at_lte').datetimepicker({
+        useCurrent: false
+    });
+    $("#id_spent_at_gte").on("change.datetimepicker", function (e) {
+        $('#id_spent_at_lte').datetimepicker('minDate', e.date);
+    });
+    $("#id_spent_at_lte").on("change.datetimepicker", function (e) {
+        $('#id_spent_at_gte').datetimepicker('maxDate', e.date);
+    });
 });
 
 // Show approved_at field only for valid states
@@ -63,3 +91,8 @@ $('#id_state').on('changed.bs.select', function (e, clickedIndex, newValue, oldV
     }
 });
 
+$(document).ready (function(){
+    window.setInterval(function () { 
+        $(".alert").alert('close'); 
+    }, 2000); 
+}); 

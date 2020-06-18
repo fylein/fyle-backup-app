@@ -18,6 +18,14 @@ class ExpenseForm(forms.Form):
         ('COMPLETE', 'COMPLETE'),
         ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING'),
         ('PAYMENT_PENDING', 'PAYMENT PENDING')]
+    fund_source_choices = [
+        ('PERSONAL', 'Personal Account'),
+        ('ADVANCE', 'Advance'),
+        ('CCC', 'Corporate Credit Card')]   
+    reimbursable_choices = [
+        ('None', 'All'),
+        ('True', 'Yes'),
+        ('False', 'No')]
     name = forms.CharField(max_length=64, label='Name*',
                            widget=forms.TextInput(
                                attrs={
@@ -30,6 +38,12 @@ class ExpenseForm(forms.Form):
     object_type = forms.CharField(
         widget=forms.HiddenInput(), initial='expenses')
     state = forms.MultipleChoiceField(choices=expense_state_choices,
+                                      required=False
+                                      )
+    fund_source = forms.MultipleChoiceField(choices=fund_source_choices,
+                                      required=False
+                                      )
+    reimbursable = forms.MultipleChoiceField(choices=reimbursable_choices,
                                       required=False
                                       )
     approved_at_gte = forms.DateField(widget=DatePicker(
@@ -52,6 +66,30 @@ class ExpenseForm(forms.Form):
         }
     ), required=False)
     updated_at_lte = forms.DateField(widget=DatePicker(
+        attrs={
+            'icon_toggle': True,
+            'append': 'fa fa-calendar'
+        }
+    ), required=False)
+    reimbursed_at_gte = forms.DateField(widget=DatePicker(
+        attrs={
+            'icon_toggle': True,
+            'append': 'fa fa-calendar'
+        }
+    ), required=False)
+    reimbursed_at_lte = forms.DateField(widget=DatePicker(
+        attrs={
+            'icon_toggle': True,
+            'append': 'fa fa-calendar'
+        }
+    ), required=False)
+    spent_at_gte = forms.DateField(widget=DatePicker(
+        attrs={
+            'icon_toggle': True,
+            'append': 'fa fa-calendar'
+        }
+    ), required=False)
+    spent_at_lte = forms.DateField(widget=DatePicker(
         attrs={
             'icon_toggle': True,
             'append': 'fa fa-calendar'
