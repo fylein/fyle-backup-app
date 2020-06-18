@@ -50,6 +50,8 @@ class FyleSdkConnector():
         Get a list of existing Expenses, that match the parameters
         :param updated_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param approved_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
+        :param spent_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
+        :param reimbursed_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param state: state of the expense [ 'PAID' , 'DRAFT' , 'APPROVED' ,
                                             'APPROVER_PENDING' , 'COMPLETE' ]
         :return: List with dicts in Expenses schema.
@@ -139,6 +141,7 @@ class Dumper():
         """
         :param data: Takes existing Expenses Data, that match the parameters
         :param path: Takes the path of the file
+        :param reimbursable: Reimbursable Filter on Expenses
         :return: CSV file with the list of existing Expenses
         """
         reimbursable = bool(reimbursable)
