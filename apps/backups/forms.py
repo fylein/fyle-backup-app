@@ -9,6 +9,7 @@ class ExpenseForm(forms.Form):
     data_format_choices = [
         ("CSV", "CSV")
     ]
+
     expense_state_choices = [
         ('FYLED', 'FYLED'),
         ('PAID', 'PAID'),
@@ -18,14 +19,16 @@ class ExpenseForm(forms.Form):
         ('COMPLETE', 'COMPLETE'),
         ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING'),
         ('PAYMENT_PENDING', 'PAYMENT PENDING')]
+
     fund_source_choices = [
         ('PERSONAL', 'Personal Account'),
         ('ADVANCE', 'Advance'),
         ('CCC', 'Corporate Credit Card')]   
+    
     reimbursable_choices = [
-        ('None', 'All'),
-        ('True', 'Yes'),
-        ('False', 'No')]
+        (True, 'Yes'),
+        (False, 'No')]
+    
     name = forms.CharField(max_length=64, label='Name*',
                            widget=forms.TextInput(
                                attrs={
@@ -43,7 +46,7 @@ class ExpenseForm(forms.Form):
     fund_source = forms.MultipleChoiceField(choices=fund_source_choices,
                                       required=False
                                       )
-    reimbursable = forms.MultipleChoiceField(choices=reimbursable_choices,
+    reimbursable = forms.ChoiceField(choices=reimbursable_choices,
                                       required=False
                                       )
     approved_at_gte = forms.DateField(widget=DatePicker(

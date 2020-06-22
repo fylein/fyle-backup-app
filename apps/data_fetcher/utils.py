@@ -45,12 +45,13 @@ class FyleSdkConnector():
             jobs_url=settings.FYLE_JOBS_URL
         )
 
-    def extract_expenses(self, state, fund_source, approved_at, updated_at, spent_at, reimbursed_at):
+    def extract_expenses(self, state, fund_source, approved_at, updated_at, spent_at, reimbursed_at, reimbursable):
         """
         Get a list of existing Expenses, that match the parameters
         :param updated_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param approved_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param spent_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
+        :param reimbursable: If filter selected - True of False
         :param reimbursed_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param state: state of the expense [ 'PAID' , 'DRAFT' , 'APPROVED' ,
                                             'APPROVER_PENDING' , 'COMPLETE' ]
@@ -59,8 +60,15 @@ class FyleSdkConnector():
         expenses = self.connection.Expenses.get_all(state=state, fund_source=fund_source, 
                                                     approved_at=approved_at,
                                                     updated_at=updated_at, spent_at=spent_at,
-                                                    reimbursed_at=reimbursed_at)        
-        return expenses
+                                                    reimbursed_at=reimbursed_at)
+        print("Reimbursable: %s", reimbursable)
+        if  reimbursable!='':
+            reimbursable = bool(reimbursable)
+            print("Reimbursable: %s", reimbursable)
+            expenses = filter(lambda x: x['reimbursable'] == reimbursable, expenses)
+            return expenses
+        else:               
+            return expenses
 
     def extract_attachments(self, expense_id):
         """
@@ -137,14 +145,12 @@ class Dumper():
             date, month, year = value.split("T")[0].split("-")[::-1]
             return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
 
-    def dump_csv(self, dir_name, reimbursable):
+    def dump_csv(self, dir_name):
         """
         :param data: Takes existing Expenses Data, that match the parameters
         :param path: Takes the path of the file
-        :param reimbursable: Reimbursable Filter on Expenses
         :return: CSV file with the list of existing Expenses
         """
-        reimbursable = bool(reimbursable)
         expenses = self.data
         data = []
         for expense in expenses: 
@@ -171,11 +177,7 @@ class Dumper():
                 'Created On': self.format_date(expense['created_at']),
                 'Approved On': self.format_date(expense['approved_at'])
             }
-            if reimbursable!='':
-                if reimbursable == expense['reimbursable']:
-                    data.append(row)
-            else:
-                data.append(row)
+            data.append(row)
         filename = dir_name + '/{0}.csv'.format(self.name)
         try:
             with open(filename, 'w') as export_file:
@@ -227,7 +229,7 @@ class Dumper():
                 logger.error('Attachment dump failed for %s, Error: %s',
                              attachment_names[index], e)
 
-    def dump_data(self, reimbursable):
+    def dump_data(self):
         """
         Wrapper function for dumping backup to local file
         """
@@ -236,7 +238,7 @@ class Dumper():
             dir_name = self.path + \
                 '{}-{}-Date--{}'.format(self.fyle_org_id, self.name, now)
             os.mkdir(dir_name)
-            self.dump_csv(dir_name, reimbursable)
+            self.dump_csv(dir_name)
             if self.download_attachments is True:
                 logger.info(
                     'Going to download attachment for backup: %s', self.name)
@@ -315,7 +317,6 @@ def fetch_and_notify_expenses(backup):
     backup_id = backup.id
     filters = json.loads(backup.filters)
     download_attachments = filters.get('download_attachments')
-    reimbursable = filters.get('reimbursable')
     refresh_token = backup.fyle_refresh_token
     fyle_org_id = backup.fyle_org_id
     name = backup.name.replace(' ', '')
@@ -327,7 +328,8 @@ def fetch_and_notify_expenses(backup):
                                                          'approved_at'),
                                                      updated_at=filters.get('updated_at'),
                                                      spent_at=filters.get('spent_at'),
-                                                     reimbursed_at=filters.get('reimbursed_at'))
+                                                     reimbursed_at=filters.get('reimbursed_at'),
+                                                     reimbursable=filters.get('reimbursable'))
     if not response_data:
         logger.info('No data found for backup_id: %s', backup_id)
         backup.current_state = 'NO DATA FOUND'
@@ -338,7 +340,7 @@ def fetch_and_notify_expenses(backup):
     dumper = Dumper(fyle_connection, path=settings.DOWNLOAD_PATH, data=response_data, name=name,
                     fyle_org_id=fyle_org_id, download_attachments=download_attachments)
     try:
-        file_path = dumper.dump_data(reimbursable)
+        file_path = dumper.dump_data()
         logger.info('Download Successful for backup_id: %s', backup_id)
 
         response = fyle_connection.upload_file_to_aws(file_path)

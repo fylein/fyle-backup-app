@@ -1,13 +1,17 @@
-$("#new-backup-btn").click(function () {
-    $(".data-filter-body").show();
+$('#new-backup-btn').click(function () {
+    $('.data-filter-body').show();
 });
 
-$("#close-filters-btn").click(function () {
-    $(".data-filter-body").hide();
+$('#close-filters-btn').click(function () {
+    $('.data-filter-body').hide();
     //Clear all the existing filters on close
-    $("#id_name").val('');
-    $("#id_state").val('default');
-    $('#id_state').selectpicker('refresh');
+    $('#id_name').val('');
+    $('#id_state').val('default');
+    $('#id_state').selectpicker('refresh');    
+    $('#id_fund_source').val('default');
+    $('#id_fund_source').selectpicker('refresh');    
+    $('#id_reimbursable').val('default');
+    $('#id_reimbursable').selectpicker('refresh');
     $('#id_approved_at_gte').val(null);
     $('#id_approved_at_lte').val(null);
     $('#id_updated_at_gte').val(null);
@@ -24,10 +28,10 @@ $(function () {
     $('#id_approved_at_lte').datetimepicker({
         useCurrent: false
     });
-    $("#id_approved_at_gte").on("change.datetimepicker", function (e) {
+    $('#id_approved_at_gte').on('change.datetimepicker', function (e) {
         $('#id_approved_at_lte').datetimepicker('minDate', e.date);
     });
-    $("#id_approved_at_lte").on("change.datetimepicker", function (e) {
+    $('#id_approved_at_lte').on('change.datetimepicker', function (e) {
         $('#id_approved_at_gte').datetimepicker('maxDate', e.date);
     });
 
@@ -36,10 +40,10 @@ $(function () {
     $('#id_updated_at_lte').datetimepicker({
         useCurrent: false
     });
-    $("#id_updated_at_gte").on("change.datetimepicker", function (e) {
+    $('#id_updated_at_gte').on('change.datetimepicker', function (e) {
         $('#id_updated_at_lte').datetimepicker('minDate', e.date);
     });
-    $("#id_updated_at_lte").on("change.datetimepicker", function (e) {
+    $('#id_updated_at_lte').on('change.datetimepicker', function (e) {
         $('#id_updated_at_gte').datetimepicker('maxDate', e.date);
     });
 
@@ -48,10 +52,10 @@ $(function () {
     $('#id_reimbursed_at_lte').datetimepicker({
         useCurrent: false
     });
-    $("#id_reimbursed_at_gte").on("change.datetimepicker", function (e) {
+    $('#id_reimbursed_at_gte').on('change.datetimepicker', function (e) {
         $('#id_reimbursed_at_lte').datetimepicker('minDate', e.date);
     });
-    $("#id_reimbursed_at_lte").on("change.datetimepicker", function (e) {
+    $('#id_reimbursed_at_lte').on('change.datetimepicker', function (e) {
         $('#id_reimbursed_at_gte').datetimepicker('maxDate', e.date);
     });
 
@@ -60,10 +64,10 @@ $(function () {
     $('#id_spent_at_lte').datetimepicker({
         useCurrent: false
     });
-    $("#id_spent_at_gte").on("change.datetimepicker", function (e) {
+    $('#id_spent_at_gte').on('change.datetimepicker', function (e) {
         $('#id_spent_at_lte').datetimepicker('minDate', e.date);
     });
-    $("#id_spent_at_lte").on("change.datetimepicker", function (e) {
+    $('#id_spent_at_lte').on('change.datetimepicker', function (e) {
         $('#id_spent_at_gte').datetimepicker('maxDate', e.date);
     });
 });
@@ -83,9 +87,9 @@ $('#id_state').on('changed.bs.select', function (e, clickedIndex, newValue, oldV
         }
     }
     if(show){
-        $(".approved_at").show()
+        $('.approved_at').show()
     } else {
-        $(".approved_at").hide();
+        $('.approved_at').hide();
         $('#id_approved_at_gte').val(null);
         $('#id_approved_at_lte').val(null);
     }
@@ -93,6 +97,6 @@ $('#id_state').on('changed.bs.select', function (e, clickedIndex, newValue, oldV
 
 $(document).ready (function(){
     window.setInterval(function () { 
-        $(".alert").alert('close'); 
+        $('.alert').alert('close'); 
     }, 2000); 
 }); 
