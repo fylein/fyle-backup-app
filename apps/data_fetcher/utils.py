@@ -48,6 +48,7 @@ class FyleSdkConnector():
     def extract_expenses(self, state, fund_source, approved_at, updated_at, spent_at, reimbursed_at, reimbursable):
         """
         Get a list of existing Expenses, that match the parameters
+        :param fund_source: Multiselect foud sources
         :param updated_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param approved_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param spent_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
@@ -61,10 +62,8 @@ class FyleSdkConnector():
                                                     approved_at=approved_at,
                                                     updated_at=updated_at, spent_at=spent_at,
                                                     reimbursed_at=reimbursed_at)
-        print("Reimbursable: %s", reimbursable)
         if  reimbursable!='':
             reimbursable = bool(reimbursable)
-            print("Reimbursable: %s", reimbursable)
             expenses = filter(lambda x: x['reimbursable'] == reimbursable, expenses)
             return expenses
         else:               
