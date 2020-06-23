@@ -63,7 +63,6 @@ class FyleSdkConnector():
                                                     updated_at=updated_at, spent_at=spent_at,
                                                     reimbursed_at=reimbursed_at)
             if  reimbursable:
-                reimbursable = bool(reimbursable)
                 expenses = filter(lambda expense: expense['reimbursable'] == reimbursable, expenses)
             return expenses
 
