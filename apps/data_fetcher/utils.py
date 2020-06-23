@@ -62,11 +62,9 @@ class FyleSdkConnector():
                                                     approved_at=approved_at,
                                                     updated_at=updated_at, spent_at=spent_at,
                                                     reimbursed_at=reimbursed_at)
-        if  reimbursable!='':
-            reimbursable = bool(reimbursable)
-            expenses = filter(lambda x: x['reimbursable'] == reimbursable, expenses)
-            return expenses
-        else:               
+            if  reimbursable:
+                reimbursable = bool(reimbursable)
+                expenses = filter(lambda expense: expense['reimbursable'] == reimbursable, expenses)
             return expenses
 
     def extract_attachments(self, expense_id):
