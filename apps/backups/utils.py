@@ -67,7 +67,7 @@ class BackupFilters():
         reimbursable = request.get('reimbursable')
         fund_source = request.get('fund_source')
         download_attachments = request.get('download_attachments')
-        filter_value_dict = json.dumps({"state": state, "approved_at": approved_at,
+        filter_value_dict = json.dumps({"state": state, "fund_source": fund_source, "approved_at": approved_at,
                                         "updated_at": updated_at, "spent_at": spent_at,
                                         "reimbursed_at": reimbursed_at, "reimbursable": reimbursable,
                                         "download_attachments": download_attachments})

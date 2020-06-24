@@ -15,18 +15,28 @@ class Migration(migrations.Migration):
             name='Backups',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('fyle_org_id', models.CharField(help_text='Fyle org_id of backup requester', max_length=255)),
-                ('fyle_refresh_token', models.CharField(help_text='Fyle Refresh Token', max_length=512)),
-                ('object_type', models.IntegerField(choices=[(1, 'Expenses')])),
-                ('current_state', models.CharField(help_text='Current state of backup', max_length=64)),
+                ('fyle_org_id', models.CharField(
+                    help_text='Fyle org_id of backup requester', max_length=255)),
+                ('fyle_refresh_token', models.CharField(
+                    help_text='Fyle Refresh Token', max_length=512)),
+                ('object_type', models.IntegerField(
+                    choices=[(1, 'Expenses')])),
+                ('current_state', models.CharField(
+                    help_text='Current state of backup', max_length=64)),
                 ('name', models.CharField(help_text='Backup name', max_length=64)),
-                ('task_id', models.CharField(help_text='Task reference for Fyle Jobs Infra', max_length=255, null=True)),
+                ('task_id', models.CharField(
+                    help_text='Task reference for Fyle Jobs Infra', max_length=255, null=True)),
                 ('filters', models.TextField(help_text='The backup configuration')),
-                ('data_format', models.CharField(help_text='Data format for backup', max_length=10)),
-                ('error_message', models.CharField(help_text='Backup failure reason', max_length=255, null=True)),
-                ('file_path', models.CharField(help_text='Cloud storage URL for this backup', max_length=512, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Created at datetime')),
-                ('modified_at', models.DateTimeField(auto_now=True, help_text='Updated at datetime')),
+                ('data_format', models.CharField(
+                    help_text='Data format for backup', max_length=10)),
+                ('error_message', models.CharField(
+                    help_text='Backup failure reason', max_length=255, null=True)),
+                ('file_path', models.CharField(
+                    help_text='Cloud storage URL for this backup', max_length=512, null=True)),
+                ('created_at', models.DateTimeField(
+                    auto_now_add=True, help_text='Created at datetime')),
+                ('modified_at', models.DateTimeField(
+                    auto_now=True, help_text='Updated at datetime')),
             ],
             options={
                 'ordering': ['-created_at'],

@@ -23,12 +23,12 @@ class ExpenseForm(forms.Form):
     fund_source_choices = [
         ('PERSONAL', 'Personal Account'),
         ('ADVANCE', 'Advance'),
-        ('CCC', 'Corporate Credit Card')]   
-    
+        ('CCC', 'Corporate Credit Card')]
+
     reimbursable_choices = [
         (True, 'Yes'),
         (False, 'No')]
-    
+
     name = forms.CharField(max_length=64, label='Name*',
                            widget=forms.TextInput(
                                attrs={
@@ -44,11 +44,11 @@ class ExpenseForm(forms.Form):
                                       required=False
                                       )
     fund_source = forms.MultipleChoiceField(choices=fund_source_choices,
-                                      required=False
-                                      )
+                                            required=False
+                                            )
     reimbursable = forms.ChoiceField(choices=reimbursable_choices,
-                                      required=False
-                                      )
+                                     required=False
+                                     )
     approved_at_gte = forms.DateField(widget=DatePicker(
         attrs={
             'icon_toggle': True,
