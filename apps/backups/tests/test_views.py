@@ -29,7 +29,8 @@ class BackupsViewTest(TestCase):
                      'data_format': ['CSV']}
         response = self.client.post('/main/backups/', post_data)
         messages = list(get_messages(response.wsgi_request))
-        self.assertEqual(str(messages[0]), 'Something went wrong. Please try again!')
+        self.assertEqual(
+            str(messages[0]), 'Something went wrong. Please try again!')
 
     def test_create_backup_success(self):
         post_data = {'name': ['test'], 'approved_at_gte': [''], 'approved_at_lte': [''],
@@ -38,5 +39,5 @@ class BackupsViewTest(TestCase):
                      'data_format': ['CSV']}
         response = self.client.post('/main/backups/', post_data)
         messages = list(get_messages(response.wsgi_request))
-        self.assertNotEqual(str(messages[0]), 'Something went wrong. Please try again!')
-
+        self.assertNotEqual(
+            str(messages[0]), 'Something went wrong. Please try again!')

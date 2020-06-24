@@ -45,18 +45,27 @@ class FyleSdkConnector():
             jobs_url=settings.FYLE_JOBS_URL
         )
 
-    def extract_expenses(self, state, approved_at, updated_at):
+    def extract_expenses(self, state, fund_source, approved_at, updated_at, spent_at, reimbursed_at, reimbursable):
         """
         Get a list of existing Expenses, that match the parameters
+        :param fund_source: Multiselect foud sources
         :param updated_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param approved_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
+        :param spent_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
+        :param reimbursable: If filter selected - True of False
+        :param reimbursed_at: Date string in yyyy-MM-ddTHH:mm:ss.SSSZ format
         :param state: state of the expense [ 'PAID' , 'DRAFT' , 'APPROVED' ,
                                             'APPROVER_PENDING' , 'COMPLETE' ]
         :return: List with dicts in Expenses schema.
         """
-        expenses = self.connection.Expenses.get_all(state=state, approved_at=approved_at,
-                                                    updated_at=updated_at)
-        
+        expenses = self.connection.Expenses.get_all(state=state, fund_source=fund_source,
+                                                    approved_at=approved_at,
+                                                    updated_at=updated_at, spent_at=spent_at,
+                                                    reimbursed_at=reimbursed_at)
+        if reimbursable:
+            reimbursable = True if reimbursable == 'True' else False
+            expenses = filter(
+                lambda expense: expense['reimbursable'] == reimbursable, expenses)
         return expenses
 
     def extract_attachments(self, expense_id):
@@ -128,8 +137,8 @@ class Dumper():
         :return formatted date
         """
         MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "June",
-            "July", "Aug", "Sept", "Oct", "Nov", "Dec"
-        ]
+                  "July", "Aug", "Sept", "Oct", "Nov", "Dec"
+                  ]
         if value:
             date, month, year = value.split("T")[0].split("-")[::-1]
             return "{} {}, {}".format(MONTHS[int(month) - 1], date, year)
@@ -142,7 +151,7 @@ class Dumper():
         """
         expenses = self.data
         data = []
-        for expense in expenses: 
+        for expense in expenses:
             row = {
                 'Expense ID': expense['id'],
                 'Orgnization Name': expense['org_name'],
@@ -266,7 +275,8 @@ def send_email(from_email, to_email, subject, content):
                        html_content=content)
         sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
         tracking_settings = TrackingSettings()
-        tracking_settings.subscription_tracking = SubscriptionTracking(enable=False)
+        tracking_settings.subscription_tracking = SubscriptionTracking(
+            enable=False)
         message.tracking_settings = tracking_settings
         sg_client.send(message)
     except Exception as e:
@@ -312,9 +322,17 @@ def fetch_and_notify_expenses(backup):
     fyle_connection = FyleSdkConnector(refresh_token)
     logger.info('Going to fetch data for backup_id: %s', backup_id)
     response_data = fyle_connection.extract_expenses(state=filters.get('state'),
+                                                     fund_source=filters.get(
+                                                         'fund_source'),
                                                      approved_at=filters.get(
                                                          'approved_at'),
-                                                     updated_at=filters.get('updated_at'))
+                                                     updated_at=filters.get(
+                                                         'updated_at'),
+                                                     spent_at=filters.get(
+                                                         'spent_at'),
+                                                     reimbursed_at=filters.get(
+                                                         'reimbursed_at'),
+                                                     reimbursable=filters.get('reimbursable'))
     if not response_data:
         logger.info('No data found for backup_id: %s', backup_id)
         backup.current_state = 'NO DATA FOUND'
