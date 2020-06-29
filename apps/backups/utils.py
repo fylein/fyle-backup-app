@@ -43,9 +43,33 @@ class BackupFilters():
         if updated_at_lte:
             updated_at.append("lte:{0}{1}".format(
                 updated_at_lte, 'T23:59:59.000Z'))
+
+        spent_at = []
+        spent_at_gte = request.get('spent_at_gte')
+        spent_at_lte = request.get('spent_at_lte')
+        if spent_at_gte:
+            spent_at.append("gte:{0}{1}".format(
+                spent_at_gte, 'T00:00:00.000Z'))
+        if spent_at_lte:
+            spent_at.append("lte:{0}{1}".format(
+                spent_at_lte, 'T23:59:59.000Z'))
+
+        reimbursed_at = []
+        reimbursed_at_gte = request.get('reimbursed_at_gte')
+        reimbursed_at_lte = request.get('reimbursed_at_lte')
+        if reimbursed_at_gte:
+            reimbursed_at.append("gte:{0}{1}".format(
+                reimbursed_at_gte, 'T00:00:00.000Z'))
+        if reimbursed_at_lte:
+            reimbursed_at.append("lte:{0}{1}".format(
+                reimbursed_at_lte, 'T23:59:59.000Z'))
+
+        reimbursable = request.get('reimbursable')
+        fund_source = request.get('fund_source')
         download_attachments = request.get('download_attachments')
-        filter_value_dict = json.dumps({"state": state, "approved_at": approved_at,
-                                        "updated_at": updated_at,
+        filter_value_dict = json.dumps({"state": state, "fund_source": fund_source, "approved_at": approved_at,
+                                        "updated_at": updated_at, "spent_at": spent_at,
+                                        "reimbursed_at": reimbursed_at, "reimbursable": reimbursable,
                                         "download_attachments": download_attachments})
         return filter_value_dict
 

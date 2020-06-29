@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='backups',
             name='fyle_file_id',
-            field=models.CharField(help_text='File ID of file', max_length=255, null=True),
+            field=models.CharField(
+                help_text='File ID of file', max_length=255, null=True),
         ),
     ]
