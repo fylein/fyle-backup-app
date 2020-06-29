@@ -11,12 +11,11 @@ class ExpenseForm(forms.Form):
     ]
 
     expense_state_choices = [
-        ('FYLED', 'FYLED'),
+        ('COMPLETE', 'FYLED'),
         ('PAID', 'PAID'),
         ('APPROVED', 'APPROVED'),
         ('DRAFT', 'DRAFT'),
         ('APPROVER_PENDING', 'APPROVER PENDING'),
-        ('COMPLETE', 'COMPLETE'),
         ('PAYMENT_PROCESSING', 'PAYMENT PROCESSING'),
         ('PAYMENT_PENDING', 'PAYMENT PENDING')]
 
