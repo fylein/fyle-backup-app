@@ -10,6 +10,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, SubscriptionTracking, TrackingSettings
 from django.template.loader import render_to_string
 from fylesdk import FyleSDK
+from fylesdk.exceptions import UnauthorizedClientError
 from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
@@ -37,6 +38,7 @@ class FyleSdkConnector():
     """
 
     def __init__(self, refresh_token):
+        self.refresh_token = refresh_token
         self.connection = FyleSDK(
             base_url=settings.FYLE_BASE_URL,
             client_id=settings.FYLE_CLIENT_ID,
@@ -58,10 +60,42 @@ class FyleSdkConnector():
                                             'APPROVER_PENDING' , 'COMPLETE' ]
         :return: List with dicts in Expenses schema.
         """
-        expenses = self.connection.Expenses.get_all(state=state, fund_source=fund_source,
-                                                    approved_at=approved_at,
-                                                    updated_at=updated_at, spent_at=spent_at,
-                                                    reimbursed_at=reimbursed_at)
+        count = self.connection.Expenses.count(
+            state=state, fund_source=fund_source,
+            approved_at=approved_at, updated_at=updated_at,
+            spent_at=spent_at,reimbursed_at=reimbursed_at
+        )['count']
+
+        expenses = []
+
+        page_size = 300
+        for i in range(0, count, page_size):
+            try:
+                segment = self.connection.Expenses.get(
+                    offset=i, limit=page_size,
+                    state=state, fund_source=fund_source,
+                    approved_at=approved_at,
+                    updated_at=updated_at, spent_at=spent_at,
+                    reimbursed_at=reimbursed_at
+                )
+
+            except UnauthorizedClientError:
+                self.connection = FyleSDK(
+                    base_url=settings.FYLE_BASE_URL,
+                    client_id=settings.FYLE_CLIENT_ID,
+                    client_secret=settings.FYLE_CLIENT_SECRET,
+                    refresh_token=self.refresh_token,
+                    jobs_url=settings.FYLE_JOBS_URL
+                )
+                segment = self.connection.Expenses.get(
+                    offset=i, limit=page_size,
+                    state=state, fund_source=fund_source,
+                    approved_at=approved_at,
+                    updated_at=updated_at, spent_at=spent_at,
+                    reimbursed_at=reimbursed_at
+                )
+            expenses = expenses + segment['data']
+
         if reimbursable:
             reimbursable = True if reimbursable == 'True' else False
             expenses = filter(
@@ -74,7 +108,17 @@ class FyleSdkConnector():
         :param expense_id: Unique ID to find an Expense.
         :return: List with dicts in Attachments schema.
         """
-        attachment = self.connection.Expenses.get_attachments(expense_id)
+        try:
+            attachment = self.connection.Expenses.get_attachments(expense_id)
+        except UnauthorizedClientError:
+            self.connection = FyleSDK(
+                base_url=settings.FYLE_BASE_URL,
+                client_id=settings.FYLE_CLIENT_ID,
+                client_secret=settings.FYLE_CLIENT_SECRET,
+                refresh_token=self.refresh_token,
+                jobs_url=settings.FYLE_JOBS_URL
+            )
+            attachment = self.connection.Expenses.get_attachments(expense_id)
         return attachment
 
     def extract_employee_details(self):
