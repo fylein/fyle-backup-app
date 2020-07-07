@@ -10,7 +10,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, SubscriptionTracking, TrackingSettings
 from django.template.loader import render_to_string
 from fylesdk import FyleSDK
-from fylesdk.exceptions import UnauthorizedClientError
+from fylesdk.exceptions import UnauthorizedClientError, ExpiredTokenError
 from fyle_backup_app import settings
 
 logger = logging.getLogger('app')
@@ -79,7 +79,7 @@ class FyleSdkConnector():
                     reimbursed_at=reimbursed_at
                 )
 
-            except UnauthorizedClientError:
+            except (UnauthorizedClientError, ExpiredTokenError):
                 self.connection = FyleSDK(
                     base_url=settings.FYLE_BASE_URL,
                     client_id=settings.FYLE_CLIENT_ID,
@@ -110,7 +110,7 @@ class FyleSdkConnector():
         """
         try:
             attachment = self.connection.Expenses.get_attachments(expense_id)
-        except UnauthorizedClientError:
+        except (UnauthorizedClientError, ExpiredTokenError):
             self.connection = FyleSDK(
                 base_url=settings.FYLE_BASE_URL,
                 client_id=settings.FYLE_CLIENT_ID,
