@@ -225,7 +225,7 @@ class Dumper():
                             #              attachment_names[index])
             except Exception as e:
                 logger.error('Attachment dump failed for %s, Error: %s',
-                             attachment_names[index], e)
+                             attachment_names[index], e.response)
 
     def dump_data(self):
         """
