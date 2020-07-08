@@ -135,7 +135,7 @@ class BackupsNotifyView(View):
         return redirect('/main/expenses/')
 
 
-class ExpensesView(View):
+class ExpensesListView(View):
     """
     Home view for Expenses
     """
@@ -150,6 +150,25 @@ class ExpensesView(View):
         response = json.loads(response.content).get('backups')
         form = ExpenseForm()
         return render(request, 'expenses.html', {'form': form, 'backup_list': response,
+                                                 'object_name': 'Expense',
+                                                 'expenses_tab': 'active'})
+
+
+class ExpensesCreateView(View):
+    """
+    Home view for Expenses
+    """
+    object_type = 'expenses'
+
+    def get(self, request):
+        if request.user.refresh_token is None:
+            messages.error(request, 'Please connect your Fyle account!')
+            return redirect('/fyle/connect/')
+        bkp_view = BackupsView()
+        response = bkp_view.get(request, self.object_type)
+        response = json.loads(response.content).get('backups')
+        form = ExpenseForm()
+        return render(request, 'expenses-create.html', {'form': form, 'backup_list': response,
                                                  'object_name': 'Expense',
                                                  'expenses_tab': 'active'})
         

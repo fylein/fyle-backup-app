@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block link %}
+    <link rel="stylesheet" href="{% static 'css/table.css' %}">
+    <link rel="stylesheet" href="{% static 'css/filters.css' %}">
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+    <div class="data-filter-body">
+        <a type="button" class="close" href="{% url 'backups-expenses-list'%}">
+            <span aria-hidden="true">×</span>
+        </a>
+        <form action="{% url 'backups-backup'%}" method="post">{% csrf_token %}
+            <strong class="text-muted">Backup Expenses that match the following criteria</strong>
+            {{ form.non_field_errors }}
+            <div class="filter-row">
+                <label class="filter-lbl">Name*</label>
+                <div class="filter-input">{{form.name}}</div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">State</label>
+                <div class="filter-input">
+                    <select class="selectpicker" title="All" multiple data-live-search="true"
+                        name="state" id="id_state">
+                                {% for choice, value in form.state.field.choices %}
+                                    <option value={{choice}}>{{ value }}</option>
+                                {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Fund Source</label>
+                <div class="filter-input">
+                    <select class="selectpicker" title="All" multiple data-live-search="true"
+                        name="fund_source" id="id_fund_source">
+                                {% for choice, value in form.fund_source.field.choices %}
+                                    <option value={{choice}}>{{ value }}</option>
+                                {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Reimbursable</label>
+                <div class="filter-input">
+                    <select class="selectpicker" title="All" data-live-search="true"
+                        name="reimbursable" id="id_reimbursable">
+                                {% for choice, value in form.reimbursable.field.choices %}
+                                    <option value={{choice}}>{{ value }}</option>
+                                {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row approved_at">
+                <label class="filter-lbl">Approved On</label>
+                <div class="filter-date">
+                    {{form.approved_at_gte}}
+                </div>
+                <div class="filter-date">
+                    {{form.approved_at_lte}}
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Updated On</label>
+                <div class="filter-date">
+                    {{form.updated_at_gte}}
+                </div>
+                <div class="filter-date">
+                    {{form.updated_at_lte}}
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Reimbursed On</label>
+                <div class="filter-date">
+                    {{form.reimbursed_at_gte}}
+                </div>
+                <div class="filter-date">
+                    {{form.reimbursed_at_lte}}
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Spent On</label>
+                <div class="filter-date">
+                    {{form.spent_at_gte}}
+                </div>
+                <div class="filter-date">
+                    {{form.spent_at_lte}}
+                </div>
+            </div>
+            <div class="filter-row">
+                <label class="filter-lbl">Include Attachments</label>
+                {{form.download_attachments}}
+            </div>
+            {{form.object_type}}
+            {{form.data_format}}
+            <button class="main-btn btn save-btn" type="submit">Backup</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block include-script %}
+    <script src="{% static 'js/expenses-create.js' %}"></script>
+{% endblock %}
