@@ -196,8 +196,6 @@ TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 SENDER_EMAIL_ID = os.environ.get('SENDGRID_FROM_EMAIL')
 
-BACKUPS_LIMIT = 5
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -74,7 +74,7 @@ class BackupsView(View):
                                               user_id__email=request.user
                                               ).values('id', 'name', 'current_state',
                                                        'error_message',
-                                                       'created_at')[:settings.BACKUPS_LIMIT]
+                                                       'created_at')
         return JsonResponse({"backups": list(backups_list)})
 
     def post(self, request):
@@ -152,3 +152,4 @@ class ExpensesView(View):
         return render(request, 'expenses.html', {'form': form, 'backup_list': response,
                                                  'object_name': 'Expense',
                                                  'expenses_tab': 'active'})
+        
