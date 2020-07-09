@@ -74,7 +74,7 @@ class BackupsView(View):
                                               user_id__email=request.user
                                               ).values('id', 'name', 'current_state',
                                                        'error_message',
-                                                       'created_at')[:settings.BACKUPS_LIMIT]
+                                                       'created_at')
         return JsonResponse({"backups": list(backups_list)})
 
     def post(self, request):
@@ -104,6 +104,23 @@ class BackupsView(View):
                          request.POST.get('name'), excp)
             messages.error(request, 'Something went wrong. Please try again!')
             return redirect('/main/{0}/'.format(request.POST.get('object_type')))
+
+
+class BackupsJSONView(View):
+    """
+    Insert/Get objects from backups table
+    """
+
+    def get(self, request):
+        object_type = 'expenses'
+        if object_type is None:
+            return {'backups': None}
+        backups_list = Backups.objects.filter(object_type=ObjectLookup[object_type],
+                                              user_id__email=request.user
+                                              ).values('id', 'name', 'current_state',
+                                                       'error_message',
+                                                       'created_at')
+        return JsonResponse({"backups": list(backups_list)})
 
 
 class BackupsNotifyView(View):
