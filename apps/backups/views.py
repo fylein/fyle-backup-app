@@ -106,6 +106,23 @@ class BackupsView(View):
             return redirect('/main/{0}/'.format(request.POST.get('object_type')))
 
 
+class BackupsJSONView(View):
+    """
+    Insert/Get objects from backups table
+    """
+
+    def get(self, request):
+        object_type = 'expenses'
+        if object_type is None:
+            return {'backups': None}
+        backups_list = Backups.objects.filter(object_type=ObjectLookup[object_type],
+                                              user_id__email=request.user
+                                              ).values('id', 'name', 'current_state',
+                                                       'error_message',
+                                                       'created_at')
+        return JsonResponse({"backups": list(backups_list)})
+
+
 class BackupsNotifyView(View):
     """
     Send backup download link to user via email
@@ -135,7 +152,7 @@ class BackupsNotifyView(View):
         return redirect('/main/expenses/')
 
 
-class ExpensesListView(View):
+class ExpensesView(View):
     """
     Home view for Expenses
     """
@@ -152,23 +169,3 @@ class ExpensesListView(View):
         return render(request, 'expenses.html', {'form': form, 'backup_list': response,
                                                  'object_name': 'Expense',
                                                  'expenses_tab': 'active'})
-
-
-class ExpensesCreateView(View):
-    """
-    Home view for Expenses
-    """
-    object_type = 'expenses'
-
-    def get(self, request):
-        if request.user.refresh_token is None:
-            messages.error(request, 'Please connect your Fyle account!')
-            return redirect('/fyle/connect/')
-        bkp_view = BackupsView()
-        response = bkp_view.get(request, self.object_type)
-        response = json.loads(response.content).get('backups')
-        form = ExpenseForm()
-        return render(request, 'expenses-create.html', {'form': form, 'backup_list': response,
-                                                 'object_name': 'Expense',
-                                                 'expenses_tab': 'active'})
-        
