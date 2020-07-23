@@ -196,6 +196,12 @@ TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 SENDER_EMAIL_ID = os.environ.get('SENDGRID_FROM_EMAIL')
 
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+S3_REGION_NAME = os.environ.get('S3_REGION_NAME')
+AWS_ATTACHMENT_BUCKET = os.environ.get('AWS_ATTACHMENT_BUCKET')
+AWS_LAMBDA_ENDPOINT = os.environ.get('AWS_LAMBDA_ENDPOINT')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

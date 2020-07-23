@@ -74,7 +74,8 @@ class BackupsView(View):
                                               user_id__email=request.user
                                               ).values('id', 'name', 'current_state',
                                                        'error_message',
-                                                       'created_at')
+                                                       'created_at', 'fyle_file_id', 
+                                                       'split_count')
         return JsonResponse({"backups": list(backups_list)})
 
     def post(self, request):
@@ -136,8 +137,9 @@ class BackupsNotifyView(View):
                 id=backup_id, user_id__email=request.user)
             fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
             object_type = ObjectLookup(backup.object_type).label.lower()
+            file_id = json.loads(backup.fyle_file_id)[0]
             response = fyle_connection.connection.Files.create_download_url(
-                backup.fyle_file_id)
+                file_id)
             notify_user(fyle_connection, response['url'], object_type)
             messages.success(request, 'We have sent you the download\
                              link by email.')
@@ -150,6 +152,38 @@ class BackupsNotifyView(View):
                          backup_id, excp, error)
             messages.error(request, 'Something went wrong. Please try again!')
         return redirect('/main/expenses/')
+
+
+class BackupsUpdateAttachments(View):
+    """
+    Send backup download link to user via email
+    """
+
+    def get(self, request, file_name):
+        print(request)
+        print(file_name)
+        # try:
+        #     logger.info('Got a notify request from user %s for backup_id: %s',
+        #                 request.user, backup_id)
+        #     backup = Backups.objects.get(
+        #         id=backup_id, user_id__email=request.user)
+        #     fyle_connection = FyleSdkConnector(backup.fyle_refresh_token)
+        #     object_type = ObjectLookup(backup.object_type).label.lower()
+        #     file_id = json.loads(backup.fyle_file_id)[0]
+        #     response = fyle_connection.connection.Files.create_download_url(
+        #         file_id)
+        #     notify_user(fyle_connection, response['url'], object_type)
+        #     messages.success(request, 'We have sent you the download\
+        #                      link by email.')
+        #     return redirect('/main/{0}/'.format(object_type))
+        # except Backups.DoesNotExist:
+        #     messages.error(request, 'Did not find a backup for this id.')
+        # except Exception as excp:
+        #     error = traceback.format_exc()
+        #     logger.error('Error while notifying user for backup_id: %s. Error: %s, Traceback: %s',
+        #                  backup_id, excp, error)
+        #     messages.error(request, 'Something went wrong. Please try again!')
+        # return redirect('/main/expenses/')
 
 
 class ExpensesView(View):
@@ -169,3 +203,31 @@ class ExpensesView(View):
         return render(request, 'expenses.html', {'form': form, 'backup_list': response,
                                                  'object_name': 'Expense',
                                                  'expenses_tab': 'active'})
+
+class DownloadsView(View):
+    """
+    Home view for Expenses
+    """
+    object_type = 'expenses'
+
+    def get(self, request):
+        if request.user.refresh_token is None:
+            messages.error(request, 'Please connect your Fyle account!')
+            return redirect('/fyle/connect/')
+        bkp_view = BackupsView()
+        response = bkp_view.get(request, self.object_type)
+        response = json.loads(response.content).get('backups')
+        backup_downloads = []
+        for backup in response:
+            attachments_ids = json.loads(backup['fyle_file_id'])
+            backup_attachment_ids = []
+            if len(attachments_ids)>1:
+                for attachment_id in attachments_ids[1:]:
+                    backup_attachment_ids.append(attachment_id)
+            backup_downloads.append(backup_attachment_ids)
+        print(backup_downloads)
+        print(response)
+        form = ExpenseForm()
+        return render(request, 'downloads.html', {'form': form, 'backup_list': response,
+                                                 'object_name': 'Expense',
+                                                 'downloads_tab': 'active'})        

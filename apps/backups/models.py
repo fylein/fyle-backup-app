@@ -34,8 +34,9 @@ class Backups(models.Model):
         auto_now_add=True, help_text='Created at datetime')
     modified_at = models.DateTimeField(
         auto_now=True, help_text='Updated at datetime')
-    fyle_file_id = models.CharField(
-        max_length=255, help_text='File ID of file', null=True)
+    fyle_file_id = models.TextField(help_text='File ID of file', null=True)
+    split_count = models.IntegerField(
+        help_text='Count of attachment segments of a Job', null=True)
 
     def __str__(self):
         return self.name

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block link %}
+    <link rel="stylesheet" href="{% static 'css/table.css' %}">
+    <link rel="stylesheet" href="{% static 'css/filters.css' %}">
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+    <!-- <div class="text-left">
+        <button class="btn main-btn" type="button" id="new-backup-btn">New Backup</button>
+    </div> -->
+    <div class="table-layout">
+        <div class="table-responsive">
+            <table class="table" id="backup-list-table">
+                <thead class="table-head">
+                    <tr class="colHeadings">
+                        <th>Name</th>
+                        <th>Created On</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in backup_list %}
+                        <tr class="expenses-table-row">
+                            <td>{{expense.name}}</td>
+                            <td>{{expense.created_at|slice:":10"}}</td>
+                            <td>{{expense.attachment_state}}</td>
+                            <td>
+                                
+                                    <a href="{% url 'backups-notify' expense.id %}" title="Resend Backup Email"><i class="fa fa-envelope"></i></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block include-script %}
+    <!-- <script src="{% static 'js/expenses.js' %}"></script> -->
+{% endblock %}
