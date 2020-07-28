@@ -10,7 +10,5 @@ urlpatterns = [
     path('backups/download/', views.DownloadsView.as_view(), name='backups-download'),
     path('backups/list/', views.BackupsJSONView.as_view(), name='backups-json'),
     path('backups/notify/<int:backup_id>/', views.BackupsNotifyView.as_view(),
-         name='backups-notify')
-    path('backups/attachments/<file_name>/', views.BackupsUpdateAttachments.as_view(),
-         name='backups-attachments')
+         name='backups-notify'),
 ]

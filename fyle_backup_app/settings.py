@@ -86,7 +86,7 @@ TEMPLATES = [
 ]
 
 # django-allauth settings
-SITE_ID = 1
+SITE_ID = 2
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/main/home/'
 LOGOUT_REDIRECT_URL = '/'

@@ -186,11 +186,11 @@ class AWSS3():
         headers = {
           'Content-Type': 'application/json'
         }
-        response = requests.post(url = endpoint, headers=headers, data = json.dumps(body))
-        response = response.json()
-        s3_file_path = response['body']['file_name']
-        print(s3_file_path)
-        return s3_file_path
+        requests.post(url = endpoint, headers=headers, data = json.dumps(body))
+        # response = response.json()
+        # s3_file_path = response['body']['file_name']
+        # print(s3_file_path)
+        # return s3_file_path
 
     def create_presigned_url(self, object_path):
         """
@@ -392,16 +392,18 @@ def processBackup(fyle_connection, download_attachments, backup, response_data):
                     except Exception as e:
                         logger.error('Attachment dump failed for %s, Error: %s',
                                      attachment_names[index], e.response)
-            zip_path = AWSS3().zipper(s3_path)
-            fyle_file_id.append(zip_path)
-            backup.fyle_file_id = json.dumps(fyle_file_id)
-            backup.save()
+            AWSS3().zipper(s3_path)
+            # fyle_file_id.append(zip_path)
+            # backup.fyle_file_id = json.dumps(fyle_file_id)
+            # backup.save()
 
     else:
         """
         If attachment download == false, then use the old
          method to create CSV
         """
+        backup.split_count = 1
+        backup.save()
         now = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
         dumper = Dumper(fyle_connection, path=settings.DOWNLOAD_PATH, data=response_data, name=name,
                     fyle_org_id=fyle_org_id, download_attachments=download_attachments)
@@ -426,12 +428,12 @@ def processBackup(fyle_connection, download_attachments, backup, response_data):
                 Key=folder_name+filename, Body=open(file_path, 'rb'))
         os.unlink(file_path)
         print("Sent Path:"+folder_name)
-        zip_path = AWSS3().zipper(folder_name)
-        fyle_file_id.append(zip_path)
+        AWSS3().zipper(folder_name)
+        # fyle_file_id.append(zip_path)
 
-    backup.fyle_file_id = json.dumps(fyle_file_id)
-    backup.current_state = 'READY'
-    backup.save()
+    # backup.fyle_file_id = json.dumps(fyle_file_id)
+    # backup.current_state = 'READY'
+    # backup.save()
     return backup
 
 
