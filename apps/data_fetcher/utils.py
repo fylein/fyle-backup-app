@@ -362,7 +362,7 @@ def processBackup(
             download_attachments=download_attachments)
         folder_name = '{}-{}-Date--{}'.format(
             dumper.fyle_org_id, dumper.name, now)
-        dir_name = '/tmp/' + folder_name
+        dir_name = settings.DOWNLOAD_PATH + folder_name
         os.mkdir(dir_name)
         for segment_id in segment_ids:
             expenses = segments[segment_id]
