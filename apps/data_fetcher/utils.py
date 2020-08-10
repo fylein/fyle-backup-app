@@ -1,20 +1,22 @@
 import base64
+import traceback
 import csv
 import os
 import shutil
 import json
 import logging
-import boto3
-import requests
-from botocore.exceptions import ClientError
-import traceback
 from datetime import datetime
+import boto3
+from botocore.exceptions import ClientError
+import requests
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, SubscriptionTracking, TrackingSettings
+from sendgrid.helpers.mail import Attachment, FileContent, FileName, FileType, Disposition
 from django.template.loader import render_to_string
 from fylesdk import FyleSDK
 from fylesdk.exceptions import UnauthorizedClientError, ExpiredTokenError, InvalidTokenError
 from fyle_backup_app import settings
+from apps.backups.models import Backups, ObjectLookup
 
 logger = logging.getLogger('app')
 
@@ -50,7 +52,15 @@ class FyleSdkConnector():
             jobs_url=settings.FYLE_JOBS_URL
         )
 
-    def extract_expenses(self, state, fund_source, approved_at, updated_at, spent_at, reimbursed_at, reimbursable):
+    def extract_expenses(
+            self,
+            state,
+            fund_source,
+            approved_at,
+            updated_at,
+            spent_at,
+            reimbursed_at,
+            reimbursable):
         """
         Get a list of existing Expenses, that match the parameters
         :param fund_source: Multiselect foud sources
@@ -66,7 +76,7 @@ class FyleSdkConnector():
         count = self.connection.Expenses.count(
             state=state, fund_source=fund_source,
             approved_at=approved_at, updated_at=updated_at,
-            spent_at=spent_at,reimbursed_at=reimbursed_at
+            spent_at=spent_at, reimbursed_at=reimbursed_at
         )['count']
 
         expenses = []
@@ -102,7 +112,8 @@ class FyleSdkConnector():
         if reimbursable:
             reimbursable = True if reimbursable == 'True' else False
             expenses = filter(
-                lambda expense: expense['reimbursable'] == reimbursable, expenses)
+                lambda expense: expense['reimbursable'] == reimbursable,
+                expenses)
         return expenses
 
     def extract_attachments(self, expense_id):
@@ -160,8 +171,10 @@ class AWSS3():
     """
     Class to handle attachments on S3
     """
+
     def __init__(self):
-        self.s3 = boto3.resource('s3',
+        self.s3 = boto3.resource(
+            's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
         self.client = boto3.client(
@@ -172,25 +185,25 @@ class AWSS3():
         self.region = settings.S3_REGION_NAME
         self.AWS_ATTACHMENT_BUCKET = settings.AWS_ATTACHMENT_BUCKET
         self.AWS_LAMBDA_ENDPOINT = settings.AWS_LAMBDA_ENDPOINT
+        self.AWS_LAMBDA_CALLBACK = settings.AWS_LAMBDA_CALLBACK
 
-    def zipper(self, folder):
+    def zipper(self, backup_id, folder, segment_id=''):
         """
         :param folder: Invoke AWS Lambda Function to ZIP all files in a dir
         :return: File full path relative to bucket
         """
         endpoint = self.AWS_LAMBDA_ENDPOINT
         body = {
-          "bucket_name": self.AWS_ATTACHMENT_BUCKET,
-          "folder": folder
+            "returnurl": self.AWS_LAMBDA_CALLBACK,
+            "bucket_name": self.AWS_ATTACHMENT_BUCKET,
+            "folder": folder,
+            "backup_id": backup_id,
+            "segment_id": segment_id
         }
         headers = {
-          'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         }
-        requests.post(url = endpoint, headers=headers, data = json.dumps(body))
-        # response = response.json()
-        # s3_file_path = response['body']['file_name']
-        # print(s3_file_path)
-        # return s3_file_path
+        requests.post(url=endpoint, headers=headers, data=json.dumps(body))
 
     def create_presigned_url(self, object_path):
         """
@@ -198,13 +211,15 @@ class AWSS3():
         :param object_path: Path to the object on S3
         :return: Signed URL
         """
-        expiration = 7*24*2600
+        expiration = 7 * 24 * 2600
 
         try:
-            response = self.client.generate_presigned_url('get_object',
-                                    Params={'Bucket': self.AWS_ATTACHMENT_BUCKET,
-                                            'Key': object_path},
-                                    ExpiresIn=expiration)
+            response = self.client.generate_presigned_url(
+                'get_object',
+                Params={
+                    'Bucket': self.AWS_ATTACHMENT_BUCKET,
+                    'Key': object_path},
+                ExpiresIn=expiration)
             return response
         except ClientError as e:
             logging.error(e)
@@ -296,14 +311,16 @@ def processSegments(response_data):
     for convinient and efficient batch processing
     """
     segments = {}
-    response_data = sorted(response_data, key = lambda expense: expense['spent_at'])
+    response_data = sorted(
+        response_data,
+        key=lambda expense: expense['spent_at'])
     monthYear_tmp = ''
 
     for expense in response_data:
         value = expense['spent_at']
         date, month, year = value.split("T")[0].split("-")[::-1]
-        monthYear = month+year
-        if(monthYear_tmp != monthYear):
+        monthYear = month + year
+        if monthYear_tmp != monthYear:
             newSegment = [expense]
         else:
             newSegment.append(expense)
@@ -313,38 +330,45 @@ def processSegments(response_data):
     return [segment_ids, segments]
 
 
-
-def processBackup(fyle_connection, download_attachments, backup, response_data):
+def processBackup(
+        fyle_connection,
+        download_attachments,
+        backup,
+        response_data):
     """
     Wrapper function for dumping backup attachments to local file
+    If download_attachments == True, then split the task
+        into subtasks and process batches
+    If attachment download == false, then use the old
+        method to create CSV
     """
     fyle_org_id = backup.fyle_org_id
-    fyle_file_id = []
     name = backup.name.replace(' ', '')
+
     if download_attachments:
-        """
-        If download_attachments == True, then split the task
-        into subtasks and process batches
-        """
         response = processSegments(response_data)
         segment_ids, segments = response[0], response[1]
-        print(segment_ids)
         backup.current_state = 'IN PROGRESS'
         backup.split_count = len(segment_ids)
         backup.save()
 
         now = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-        dumper = Dumper(fyle_connection, path=settings.DOWNLOAD_PATH, data=response_data, name=name,
-                    fyle_org_id=fyle_org_id, download_attachments=download_attachments)
-        folder_name = '{}-{}-Date--{}'.format(dumper.fyle_org_id, dumper.name, now)
-        dir_name = '/tmp/'+folder_name
+        dumper = Dumper(
+            fyle_connection,
+            path=settings.DOWNLOAD_PATH,
+            data=response_data,
+            name=name,
+            fyle_org_id=fyle_org_id,
+            download_attachments=download_attachments)
+        folder_name = '{}-{}-Date--{}'.format(
+            dumper.fyle_org_id, dumper.name, now)
+        dir_name = '/tmp/' + folder_name
         os.mkdir(dir_name)
-
         for segment_id in segment_ids:
             expenses = segments[segment_id]
-            os.mkdir(dir_name+'/'+ segment_id)
+            os.mkdir(dir_name + '/' + segment_id)
             filename = '{}-{}.csv'.format(name, segment_id)
-            file_path = dir_name + '/'+ segment_id + '/' + filename
+            file_path = dir_name + '/' + segment_id + '/' + filename
             response_data = dumper.dump_csv(expenses)
             try:
                 with open(file_path, 'w') as export_file:
@@ -356,64 +380,61 @@ def processBackup(fyle_connection, download_attachments, backup, response_data):
             except (OSError, csv.Error) as e:
                 logger.error('CSV dump failed for %s, Error: %s', name, e)
                 raise
-
-            s3_path = folder_name+'/'+segment_id
+            s3_path = folder_name + '/' + segment_id
             AWSS3().s3.Bucket(settings.AWS_ATTACHMENT_BUCKET).put_object(
-                Key=s3_path+'/'+filename, Body=open(file_path, 'rb'))
+                Key=s3_path + '/' + filename, Body=open(file_path, 'rb'))
             os.unlink(file_path)
-
             expense_ids = [(i.get('id'))
                            for i in expenses if i['has_attachments'] is True]
             if not expense_ids:
                 pass
             else:
                 logger.info(
-                    '%s Expense(s) have attachment(s) . Downloading now.', len(expenses))
-
+                    '%s Expense(s) have attachment(s) . Downloading now.',
+                    len(expenses))
                 for expense_id in expense_ids:
                     try:
-                        attachment = fyle_connection.extract_attachments(expense_id)
+                        attachment = fyle_connection.extract_attachments(
+                            expense_id)
                         attachment_data = attachment['data']
                         attachment_content = [item.get('content')
                                               for item in attachment_data]
-
                         if attachment['data']:
                             attachment = attachment['data'][0]
                             attachment['expense_id'] = expense_id
                             attachment_names = [item.get('filename')
                                                 for item in attachment_data]
-
-                            for index, img_data in enumerate(attachment_content):
-                                img_data = (attachment_content[index])                               
-                                AWSS3().s3.Bucket(settings.AWS_ATTACHMENT_BUCKET).put_object(
-                                    Key=s3_path+'/'+attachment_names[index]
-                                    , Body=img_data)
-                                    
+                            for index, img_data in enumerate(
+                                    attachment_content):
+                                img_data = (attachment_content[index])
+                                AWSS3().s3.Bucket(
+                                    settings.AWS_ATTACHMENT_BUCKET).put_object(
+                                        Key=s3_path + '/' + attachment_names[index], Body=img_data)
                     except Exception as e:
-                        logger.error('Attachment dump failed for %s, Error: %s',
-                                     attachment_names[index], e.response)
-            AWSS3().zipper(s3_path)
-            # fyle_file_id.append(zip_path)
-            # backup.fyle_file_id = json.dumps(fyle_file_id)
-            # backup.save()
-
+                        logger.error(
+                            'Attachment dump failed for %s, Error: %s',
+                            attachment_names[index],
+                            e.response)
+            AWSS3().zipper(backup.id, s3_path, segment_id)
     else:
-        """
-        If attachment download == false, then use the old
-         method to create CSV
-        """
         backup.split_count = 1
+        backup.current_state = 'IN PROGRESS'
         backup.save()
         now = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-        dumper = Dumper(fyle_connection, path=settings.DOWNLOAD_PATH, data=response_data, name=name,
-                    fyle_org_id=fyle_org_id, download_attachments=download_attachments)
-        folder_name = '{}-{}-Date--{}'.format(dumper.fyle_org_id, dumper.name, now)
+        dumper = Dumper(
+            fyle_connection,
+            path=settings.DOWNLOAD_PATH,
+            data=response_data,
+            name=name,
+            fyle_org_id=fyle_org_id,
+            download_attachments=download_attachments)
+        folder_name = '{}-{}-Date--{}'.format(
+            dumper.fyle_org_id, dumper.name, now)
         response_data = dumper.dump_csv(response_data)
-        dir_name = '/tmp/'+folder_name
+        dir_name = '/tmp/' + folder_name
         os.mkdir(dir_name)
         filename = '/{0}.csv'.format(name)
         file_path = dir_name + filename
-        print("Folder Name: "+folder_name)
         try:
             with open(file_path, 'w') as export_file:
                 keys = response_data[0].keys()
@@ -425,19 +446,14 @@ def processBackup(fyle_connection, download_attachments, backup, response_data):
             logger.error('CSV dump failed for %s, Error: %s', name, e)
             raise
         AWSS3().s3.Bucket(settings.AWS_ATTACHMENT_BUCKET).put_object(
-                Key=folder_name+filename, Body=open(file_path, 'rb'))
+            Key=folder_name + filename, Body=open(file_path, 'rb'))
+        AWSS3().zipper(backup.id, folder_name)
         os.unlink(file_path)
-        print("Sent Path:"+folder_name)
-        AWSS3().zipper(folder_name)
-        # fyle_file_id.append(zip_path)
 
-    # backup.fyle_file_id = json.dumps(fyle_file_id)
-    # backup.current_state = 'READY'
-    # backup.save()
     return backup
 
 
-def send_email(from_email, to_email, subject, content):
+def send_email(from_email, to_email, subject, content, attachment=''):
     """
     Send an email notification
     :param from_email: email_id of sender
@@ -455,6 +471,18 @@ def send_email(from_email, to_email, subject, content):
         tracking_settings.subscription_tracking = SubscriptionTracking(
             enable=False)
         message.tracking_settings = tracking_settings
+        if attachment:
+            with open(attachment, 'rb') as f:
+                data = f.read()
+                f.close()
+            encoded_file = base64.b64encode(data).decode()
+            attachedFile = Attachment(
+                FileContent(encoded_file),
+                FileName('backup.csv'),
+                FileType('text/csv'),
+                Disposition('attachment')
+            )
+            message.attachment = attachedFile
         sg_client.send(message)
     except Exception as e:
         error = traceback.format_exc()
@@ -462,7 +490,7 @@ def send_email(from_email, to_email, subject, content):
         logger.error(e.body)
 
 
-def notify_user(fyle_connection, download_url, object_type):
+def notify_user(fyle_connection, backup_id, object_type):
     """
     Get a presigned URL and mail it to user
     :param fyle_connection: fyle SDK connection
@@ -470,14 +498,41 @@ def notify_user(fyle_connection, download_url, object_type):
     :param object_type: business object type eg: expenses
     """
     try:
+        backup = Backups.objects.get(id=backup_id)
+        downloads = json.loads(backup.fyle_file_id)
+        if list(downloads[0].keys())[0] == "csv":
+            backup_list = [
+                {'link': AWSS3().create_presigned_url(downloads[0]['csv'])}]
+        else:
+            backup_list = [{'month': backups, 'link': AWSS3().create_presigned_url(
+                downloads[backups])} for backups in downloads]
+        now = backup.fyle_org_id + "-" + backup.name + "-" + \
+            datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        file_name = now + '.csv'
+        file_path = '/tmp/' + file_name
+        try:
+            with open(file_path, 'w') as export_file:
+                keys = backup_list[0].keys()
+                dict_writer = csv.DictWriter(
+                    export_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(backup_list)
+        except BaseException:
+            error = traceback.format_exc()
+            logger.error('CSV dump failed, Error: %s', error)
+            raise
+        attachment = file_path
         user_data = fyle_connection.extract_employee_details()
         email_to = user_data.get('employee_email')
         subject = 'The {0} backup you requested from Fyle\
                    is ready for download'.format(object_type.capitalize())
-        content = render_to_string('email_body.html', {'link': download_url})
-        send_email(settings.SENDER_EMAIL_ID, email_to, subject, content)
-        print('Signed Download URL: ', download_url)
-
+        content = render_to_string('email_body.html', {'link': attachment})
+        send_email(
+            settings.SENDER_EMAIL_ID,
+            email_to,
+            subject,
+            content,
+            attachment)
     except Exception as e:
         logger.error('Error while notifying user due to %s', e)
         raise
@@ -496,18 +551,14 @@ def fetch_and_notify_expenses(backup):
     refresh_token = backup.fyle_refresh_token
     fyle_connection = FyleSdkConnector(refresh_token)
     logger.info('Going to fetch data for backup_id: %s', backup_id)
-    response_data = fyle_connection.extract_expenses(state=filters.get('state'),
-                                                     fund_source=filters.get(
-                                                         'fund_source'),
-                                                     approved_at=filters.get(
-                                                         'approved_at'),
-                                                     updated_at=filters.get(
-                                                         'updated_at'),
-                                                     spent_at=filters.get(
-                                                         'spent_at'),
-                                                     reimbursed_at=filters.get(
-                                                         'reimbursed_at'),
-                                                     reimbursable=filters.get('reimbursable'))
+    response_data = fyle_connection.extract_expenses(
+        state=filters.get('state'),
+        fund_source=filters.get('fund_source'),
+        approved_at=filters.get('approved_at'),
+        updated_at=filters.get('updated_at'),
+        spent_at=filters.get('spent_at'),
+        reimbursed_at=filters.get('reimbursed_at'),
+        reimbursable=filters.get('reimbursable'))
     if not response_data:
         logger.info('No data found for backup_id: %s', backup_id)
         backup.current_state = 'NO DATA FOUND'
@@ -519,16 +570,21 @@ def fetch_and_notify_expenses(backup):
     try:
         backup.fyle_file_id = []
         backup.save()
-        backup = processBackup(fyle_connection, download_attachments, backup, response_data)
-        backup.current_state = 'READY'
-        backup.save()        
-        # Remove the files from local machine
-        
+        backup = processBackup(
+            fyle_connection,
+            download_attachments,
+            backup,
+            response_data)
+        backup.save()
+
         return True
     except Exception as e:
         backup.current_state = 'FAILED'
         backup.save()
         error = traceback.format_exc()
         logger.error(
-            'Backup process failed for bkp_id: %s . Error: %s , Traceback: %s', backup_id, e, error)
+            'Backup process failed for bkp_id: %s . Error: %s , Traceback: %s',
+            backup_id,
+            e,
+            error)
         return False

@@ -25,11 +25,11 @@ from apps.backups.views import BackupsUpdateAttachments
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', UserLoginView.as_view(), name='User login'),
-    path('backups/attachments/', BackupsUpdateAttachments.as_view(),
-         name='backups-attachments'),
     path('accounts/social/login/cancelled/', UserLoginView.as_view()),
     path('accounts/', include('allauth.urls')),
     path('main/', decorator_include([login_required], 'apps.backups.urls')),
     path('fyle/', decorator_include([login_required], 'apps.fyle_connect.urls')),
-    path('fetcher/', include('apps.data_fetcher.urls'))
+    path('fetcher/', include('apps.data_fetcher.urls')),
+    path('backups/attachments/', BackupsUpdateAttachments.as_view(),
+         name='backups-attachments')
 ]

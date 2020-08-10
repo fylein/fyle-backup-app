@@ -9,7 +9,13 @@ class UserProfileManager(BaseUserManager):
     Manager for custom user model
     """
 
-    def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
+    def _create_user(
+            self,
+            email,
+            password,
+            is_staff,
+            is_superuser,
+            **extra_fields):
         if not email:
             raise ValueError('Users must have an email address')
         now = timezone.now()
@@ -49,10 +55,14 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, help_text="Staff user")
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
-    refresh_token = models.CharField(null=True, max_length=512,
-                                     help_text='Fyle refresh token of current active account')
-    fyle_org_id = models.CharField(max_length=255, null=True,
-                                   help_text='Fyle org id of current active account')
+    refresh_token = models.CharField(
+        null=True,
+        max_length=512,
+        help_text='Fyle refresh token of current active account')
+    fyle_org_id = models.CharField(
+        max_length=255,
+        null=True,
+        help_text='Fyle org id of current active account')
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'

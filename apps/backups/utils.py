@@ -67,9 +67,13 @@ class BackupFilters():
         reimbursable = request.get('reimbursable')
         fund_source = request.get('fund_source')
         download_attachments = request.get('download_attachments')
-        filter_value_dict = json.dumps({"state": state, "fund_source": fund_source, "approved_at": approved_at,
-                                        "updated_at": updated_at, "spent_at": spent_at,
-                                        "reimbursed_at": reimbursed_at, "reimbursable": reimbursable,
+        filter_value_dict = json.dumps({"state": state,
+                                        "fund_source": fund_source,
+                                        "approved_at": approved_at,
+                                        "updated_at": updated_at,
+                                        "spent_at": spent_at,
+                                        "reimbursed_at": reimbursed_at,
+                                        "reimbursable": reimbursable,
                                         "download_attachments": download_attachments})
         return filter_value_dict
 
@@ -136,4 +140,6 @@ def schedule_backup(request, backup):
     except Exception:
         error = traceback.format_exc()
         logger.error(
-            'Exception occured while scheduling backup_id: %s, Traceback: %s', backup.id, error)
+            'Exception occured while scheduling backup_id: %s, Traceback: %s',
+            backup.id,
+            error)
