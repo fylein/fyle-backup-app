@@ -86,7 +86,7 @@ TEMPLATES = [
 ]
 
 # django-allauth settings
-SITE_ID = 1
+SITE_ID = 2
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/main/home/'
 LOGOUT_REDIRECT_URL = '/'
@@ -196,7 +196,12 @@ TEST_FYLE_ORG_ID = os.environ.get('TEST_FYLE_ORG_ID')
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 SENDER_EMAIL_ID = os.environ.get('SENDGRID_FROM_EMAIL')
 
-BACKUPS_LIMIT = 20
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+S3_REGION_NAME = os.environ.get('S3_REGION_NAME')
+AWS_ATTACHMENT_BUCKET = os.environ.get('AWS_ATTACHMENT_BUCKET')
+AWS_LAMBDA_ENDPOINT = os.environ.get('AWS_LAMBDA_ENDPOINT')
+AWS_LAMBDA_CALLBACK = os.environ.get('AWS_LAMBDA_CALLBACK')
 
 LOGGING = {
     'version': 1,

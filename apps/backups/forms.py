@@ -28,12 +28,13 @@ class ExpenseForm(forms.Form):
         (True, 'Yes'),
         (False, 'No')]
 
-    name = forms.CharField(max_length=64, label='Name*',
-                           widget=forms.TextInput(
-                               attrs={
-                                   'placeholder': 'Provide a name for this backup',
-                                   'autocomplete': 'off'
-                               }))
+    name = forms.CharField(
+        max_length=64,
+        label='Name*',
+        widget=forms.TextInput(
+            attrs={
+                'placeholder': 'Provide a name for this backup',
+                'autocomplete': 'off'}))
     data_format = forms.ChoiceField(widget=forms.HiddenInput(),
                                     choices=data_format_choices,
                                     initial='CSV')

@@ -95,8 +95,43 @@ $('#id_state').on('changed.bs.select', function (e, clickedIndex, newValue, oldV
     }
 });
 
+// Auto-refresh on minimum one task with IN PROGRESS state
+function refreshBackupList(){
+    $.ajax({
+        method: 'GET',
+        url: '/main/backups/list/',
+        success: function(data) {
+            $('#backup-list-table tbody').empty();
+            data = data['backups']
+            $.each(data, function (key, expense) {
+                var id = expense.id;
+                var name = expense.name;
+                var created_at = (expense.created_at).substr(0, 10);
+                var current_state = expense.current_state;
+                var email_icon = '';
+                if (current_state == 'IN PROGRESS')
+                    document.getElementById('in_progress_count')
+                if (current_state == 'READY')
+                    email_icon = '<a href="/main/backups/notify/'+ id +'" title="Resend Backup Email"><i class="fa fa-envelope"></i></a>';
+                $('#backup-list-table tbody').append(
+                   '<tr class="expenses-table-row"><td>' + name + '</td><td>' + created_at + '</td><td>' + current_state + '</td><td>' + email_icon + '</td></tr>'
+                )
+            })
+            let inProgressList = data.filter(expense => expense.current_state == 'IN PROGRESS');
+            if (inProgressList.length > 0)
+                setTimeout(function(){refreshBackupList();}, 2000);
+        },
+        error: function(data) {
+            console.log('Error refreshing backups list')
+            console.log(data)
+        }
+    });
+}
+
 $(document).ready (function(){
+    refreshBackupList();
     window.setInterval(function () { 
         $('.alert').alert('close'); 
     }, 2000); 
 }); 
+

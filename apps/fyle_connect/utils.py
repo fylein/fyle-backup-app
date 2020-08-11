@@ -36,10 +36,13 @@ class FyleOAuth2():
         :param authorization_code:
         :return refresh token string
         """
-        json_response = requests.post(self.token_url, data={"grant_type": "authorization_code",
-                                                            "client_id": self.client_id,
-                                                            "client_secret": self.client_secret,
-                                                            "code": authorization_code})
+        json_response = requests.post(
+            self.token_url,
+            data={
+                "grant_type": "authorization_code",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "code": authorization_code})
         data = json.loads(json_response.text)
         refresh_token = data.get("refresh_token")
         return refresh_token

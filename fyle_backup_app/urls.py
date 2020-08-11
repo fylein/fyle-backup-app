@@ -20,6 +20,7 @@ from django.urls import path, include
 
 
 from apps.user.views import UserLoginView
+from apps.backups.views import BackupsUpdateAttachments
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,5 +29,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('main/', decorator_include([login_required], 'apps.backups.urls')),
     path('fyle/', decorator_include([login_required], 'apps.fyle_connect.urls')),
-    path('fetcher/', include('apps.data_fetcher.urls'))
+    path('fetcher/', include('apps.data_fetcher.urls')),
+    path('backups/attachments/', BackupsUpdateAttachments.as_view(),
+         name='backups-attachments')
 ]
